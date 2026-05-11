@@ -371,3 +371,120 @@ h2 {
         grid-template-columns: 1fr;
     }
 }
+
+.typing-input {
+    width: 100%;
+    min-height: 10rem;
+    resize: vertical;
+    padding: 1.2rem;
+    border: 1px solid var(--border);
+    border-radius: 1.25rem;
+    background: rgba(255, 248, 232, 0.7);
+    color: var(--text-main);
+    font: inherit;
+    font-size: 1.05rem;
+    line-height: 1.8;
+    outline: none;
+}
+
+.typing-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(184, 135, 45, 0.16);
+}
+
+.typing-input:disabled {
+    opacity: 0.72;
+    cursor: not-allowed;
+}
+
+.target-text-box {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.target-char {
+    border-radius: 0.25rem;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.char-pending {
+    color: var(--text-main);
+}
+
+.char-current {
+    background: rgba(184, 135, 45, 0.25);
+    color: var(--accent-dark);
+}
+
+.char-correct {
+    background: rgba(31, 93, 67, 0.16);
+    color: var(--green);
+}
+
+.char-wrong {
+    background: rgba(190, 45, 45, 0.18);
+    color: #a82222;
+}
+
+.result-panel {
+    padding: 1.25rem;
+    border-radius: 1.25rem;
+    border: 1px solid var(--border);
+    background: rgba(255, 248, 232, 0.8);
+}
+
+.result-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.result-grid div {
+    padding: 1rem;
+    border-radius: 1rem;
+    background: var(--green-soft);
+}
+
+.result-grid strong {
+    display: block;
+    color: var(--green);
+    font-size: 1.5rem;
+}
+
+.result-grid span {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--text-muted);
+    font-weight: 800;
+    font-size: 0.85rem;
+}
+
+.stars-row {
+    margin-top: 1rem;
+    font-size: 2rem;
+    letter-spacing: 0.2rem;
+    color: rgba(114, 95, 70, 0.35);
+}
+
+.stars-row span.active {
+    color: var(--accent);
+}
+
+.game-actions {
+    display: flex;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 720px) {
+    .result-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .result-grid {
+        grid-template-columns: 1fr;
+    }
+}
