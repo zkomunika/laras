@@ -17,6 +17,7 @@
                 <RouterLink v-if="auth.isAuthenticated" to="/profile">Profile</RouterLink>
                 <RouterLink v-if="!auth.isAuthenticated" to="/login">Login</RouterLink>
                 <RouterLink v-if="!auth.isAuthenticated" to="/register">Register</RouterLink>
+                <RouterLink v-if="auth.isAuthenticated" to="/realtime">Realtime</RouterLink>
 
                 <button
                     v-if="auth.isAuthenticated"

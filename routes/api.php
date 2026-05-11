@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\ProgressController;
 use App\Http\Controllers\Api\V1\LeaderboardController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\RealtimeController;
 
 Route::prefix('v1')->group(function () {
     Route::get('/health', function () {
@@ -38,5 +39,11 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/progress', [ProgressController::class, 'index']);
         Route::get('/profile', [ProfileController::class, 'show']);
+
+        Route::post('/realtime/heartbeat', [RealtimeController::class, 'heartbeat']);
+
+        Route::get('/realtime/online-users', [RealtimeController::class, 'onlineUsers']);
+        Route::get('/realtime/messages', [RealtimeController::class, 'messages']);
+        Route::post('/realtime/messages', [RealtimeController::class, 'sendMessage']);
     });
 });

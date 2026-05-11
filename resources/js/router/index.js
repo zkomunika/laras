@@ -10,6 +10,7 @@ import NotFoundView from "@/views/NotFoundView.vue";
 import LoginView from "@/views/LoginView.vue";
 import RegisterView from "@/views/RegisterView.vue";
 import { useAuthStore } from "@/stores/authStore";
+import RealtimeView from "@/views/RealtimeView.vue";
 
 const routes = [
     {
@@ -64,6 +65,12 @@ const routes = [
         name: "register",
         component: RegisterView,
     },
+    {
+        path: "/realtime",
+        name: "realtime",
+        component: RealtimeView,
+        meta: { requiresAuth: true },
+    },
 ];
 
 const router = createRouter({
@@ -75,11 +82,14 @@ router.beforeEach((to) => {
     const auth = useAuthStore();
 
     if (to.meta.requiresAuth && !auth.isAuthenticated) {
-        return '/login';
+        return "/login";
     }
 
-    if ((to.name === 'login' || to.name === 'register') && auth.isAuthenticated) {
-        return '/chapters';
+    if (
+        (to.name === "login" || to.name === "register") &&
+        auth.isAuthenticated
+    ) {
+        return "/chapters";
     }
 });
 
