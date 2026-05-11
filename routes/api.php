@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\ChapterController;
 use App\Http\Controllers\Api\V1\LevelController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\V1\GameController;
 
 Route::prefix('v1')->group(function () {
     Route::get('/health', function () {
@@ -18,4 +19,7 @@ Route::prefix('v1')->group(function () {
 
     Route::get('/levels', [LevelController::class, 'index']);
     Route::get('/levels/{level}', [LevelController::class, 'show']);
+
+    Route::post('/game/start', [GameController::class, 'start']);
+    Route::post('/game/submit', [GameController::class, 'submit']);
 });

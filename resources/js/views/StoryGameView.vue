@@ -45,7 +45,7 @@
                     class="typing-input"
                     :value="typedText"
                     :maxlength="targetText.length"
-                    :disabled="inputDisabled"
+                    :disabled="inputDisabled || submittingResult"
                     placeholder="Mulai ketik teks di sini..."
                     autofocus
                     @input="handleTypingInput"
@@ -63,22 +63,22 @@
 
                     <div class="result-grid">
                         <div>
-                            <strong>{{ wpm }}</strong>
+                            <strong>{{ serverResult?.wpm ?? wpm }}</strong>
                             <span>WPM</span>
                         </div>
 
                         <div>
-                            <strong>{{ accuracy }}%</strong>
+                            <strong>{{ serverResult?.accuracy ?? accuracy }}%</strong>
                             <span>Akurasi</span>
                         </div>
 
                         <div>
-                            <strong>{{ mistakes }}</strong>
+                            <strong>{{ serverResult?.mistakes ?? mistakes }}</strong>
                             <span>Kesalahan</span>
                         </div>
 
                         <div>
-                            <strong>{{ score }}</strong>
+                            <strong>{{ serverResult?.score ?? score }}</strong>
                             <span>Skor</span>
                         </div>
                     </div>
@@ -87,15 +87,23 @@
                         <span
                             v-for="star in 3"
                             :key="star"
-                            :class="{ active: star <= stars }"
+                            :class="{ active: star <= (serverResult?.stars ?? stars) }"
                         >
                             ★
                         </span>
                     </div>
+
+                    <p v-if="submittingResult" class="save-status">
+                        Menyimpan hasil permainan...
+                    </p>
+
+                    <p v-else-if="submitMessage" class="save-status">
+                        {{ submitMessage }}
+                    </p>
                 </div>
 
                 <div class="game-actions">
-                    <button type="button" class="btn btn-primary" @click="resetGame">
+                    <button type="button" class="btn btn-primary" @click="handleResetGame">
                         Ulangi Level
                     </button>
 
@@ -109,8 +117,9 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { levelApi } from '@/services/levelApi';
+import { gameApi } from '@/services/gameApi';
 import { useTypingGame } from '@/composables/useTypingGame';
 
 const props = defineProps({
@@ -123,6 +132,14 @@ const props = defineProps({
 const level = ref(null);
 const loading = ref(true);
 const error = ref('');
+
+const attemptId = ref(null);
+const serverResult = ref(null);
+const submittingResult = ref(false);
+const submitMessage = ref('');
+const resultSubmitted = ref(false);
+
+let startPromise = null;
 
 const {
     targetText,
@@ -154,8 +171,71 @@ onMounted(async () => {
     }
 });
 
+function ensureServerAttemptStarted() {
+    if (attemptId.value) {
+        return Promise.resolve(attemptId.value);
+    }
+
+    if (!startPromise) {
+        startPromise = gameApi.start(level.value.id)
+            .then((attempt) => {
+                attemptId.value = attempt.id;
+                return attempt.id;
+            })
+            .finally(() => {
+                startPromise = null;
+            });
+    }
+
+    return startPromise;
+}
+
 function handleTypingInput(event) {
+    ensureServerAttemptStarted();
+
     updateTypedText(event.target.value);
     event.target.value = typedText.value;
+}
+
+watch(status, async (newStatus) => {
+    if (!['finished', 'failed'].includes(newStatus)) {
+        return;
+    }
+
+    if (resultSubmitted.value) {
+        return;
+    }
+
+    resultSubmitted.value = true;
+    submittingResult.value = true;
+    submitMessage.value = '';
+
+    try {
+        if (!attemptId.value && startPromise) {
+            await startPromise;
+        }
+
+        if (!attemptId.value) {
+            throw new Error('Attempt belum dibuat.');
+        }
+
+        serverResult.value = await gameApi.submit(attemptId.value, typedText.value);
+        submitMessage.value = 'Hasil berhasil disimpan ke database.';
+    } catch (err) {
+        submitMessage.value = 'Hasil belum berhasil disimpan. Cek server atau API.';
+    } finally {
+        submittingResult.value = false;
+    }
+});
+
+function handleResetGame() {
+    attemptId.value = null;
+    serverResult.value = null;
+    submitMessage.value = '';
+    submittingResult.value = false;
+    resultSubmitted.value = false;
+    startPromise = null;
+
+    resetGame();
 }
 </script>

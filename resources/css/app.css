@@ -488,3 +488,9 @@ h2 {
         grid-template-columns: 1fr;
     }
 }
+
+.save-status {
+    margin: 1rem 0 0;
+    color: var(--green);
+    font-weight: 800;
+}
