@@ -5,13 +5,14 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\PlayerProgress;
 use App\Models\TypingAttempt;
+use Illuminate\Http\Request;
 use App\Models\User;
 
 class ProfileController extends Controller
 {
-    public function show()
+    public function show(Request $request)
     {
-        $user = User::findOrFail(1);
+        $user = $request->user();
 
         $progress = PlayerProgress::query()
             ->where('user_id', $user->id)

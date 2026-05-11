@@ -17,7 +17,7 @@ class GameController extends Controller
         ]);
 
         $attempt = TypingAttempt::create([
-            'user_id' => 1,
+            'user_id' => $request->user()->id,
             'level_id' => $validated['level_id'],
             'started_at' => now(),
         ]);
@@ -39,7 +39,9 @@ class GameController extends Controller
             'typed_text' => ['nullable', 'string'],
         ]);
 
-        $attempt = TypingAttempt::with('level')->findOrFail($validated['attempt_id']);
+        $attempt = TypingAttempt::with('level')
+            ->where('user_id', $request->user()->id)
+            ->findOrFail($validated['attempt_id']);
         $level = $attempt->level;
 
         $result = $typingGameService->calculate(

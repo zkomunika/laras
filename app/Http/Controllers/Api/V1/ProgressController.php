@@ -11,7 +11,7 @@ class ProgressController extends Controller
     {
         $progress = PlayerProgress::query()
             ->with('level')
-            ->where('user_id', 1)
+            ->where('user_id', request()->user()->id)
             ->get()
             ->map(function ($item) {
                 return [

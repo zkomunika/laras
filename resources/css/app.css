@@ -609,3 +609,72 @@ h2 {
         grid-template-columns: 1fr;
     }
 }
+
+.nav-button {
+    padding: 0.6rem 0.85rem;
+    border-radius: 999px;
+    border: none;
+    background: rgba(31, 93, 67, 0.12);
+    color: var(--green);
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.auth-page {
+    display: grid;
+    place-items: center;
+    min-height: 70vh;
+}
+
+.auth-card {
+    width: min(460px, 100%);
+    padding: 1.5rem;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 1.5rem;
+    box-shadow: var(--shadow);
+}
+
+.auth-form {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.auth-form label {
+    display: grid;
+    gap: 0.45rem;
+    color: var(--text-muted);
+    font-weight: 800;
+}
+
+.auth-form input {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border-radius: 1rem;
+    border: 1px solid var(--border);
+    background: rgba(255, 248, 232, 0.75);
+    color: var(--text-main);
+    font: inherit;
+    outline: none;
+}
+
+.auth-form input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(184, 135, 45, 0.16);
+}
+
+.form-error {
+    color: #a82222;
+    font-weight: 800;
+}
+
+.auth-switch {
+    margin-top: 1rem;
+    color: var(--text-muted);
+}
+
+.auth-switch a {
+    color: var(--green);
+    font-weight: 900;
+}
