@@ -5,57 +5,59 @@
             <h1>Daftar BAB</h1>
         </div>
 
-        <div class="chapter-grid">
+        <div v-if="loading" class="empty-state">
+            Memuat data BAB...
+        </div>
+
+        <div v-else-if="error" class="empty-state">
+            {{ error }}
+        </div>
+
+        <div v-else class="chapter-grid">
             <article
                 v-for="chapter in chapters"
                 :key="chapter.id"
                 class="chapter-card"
             >
-                <span class="chapter-number">BAB {{ chapter.id }}</span>
+                <span class="chapter-number">BAB {{ chapter.number }}</span>
 
                 <h2>{{ chapter.title }}</h2>
 
                 <p>{{ chapter.description }}</p>
 
-                <RouterLink :to="`/story/levels/${chapter.startLevel}`" class="text-link">
-                    Masuk Level {{ chapter.startLevel }}
-                </RouterLink>
+                <div class="chapter-meta">
+                    {{ chapter.levels_count }} level
+                </div>
+
+                <div class="card-actions">
+                    <RouterLink :to="`/chapters/${chapter.id}`" class="text-link">
+                        Lihat Level
+                    </RouterLink>
+
+                    <RouterLink :to="`/story/levels/${chapter.start_level}`" class="text-link">
+                        Mulai
+                    </RouterLink>
+                </div>
             </article>
         </div>
     </section>
 </template>
 
 <script setup>
-const chapters = [
-    {
-        id: 1,
-        title: 'Awal Sang Juru Aksara',
-        description: 'Pengenalan dunia Siliwangi, teks pendek, dan target WPM rendah.',
-        startLevel: 1,
-    },
-    {
-        id: 2,
-        title: 'Jejak Ladang Aksara',
-        description: 'Teks mulai lebih panjang, tempo permainan meningkat, dan cerita mulai berkembang.',
-        startLevel: 11,
-    },
-    {
-        id: 3,
-        title: 'Pujangga Kerajaan',
-        description: 'Kalimat lebih kompleks dan target akurasi mulai lebih tinggi.',
-        startLevel: 21,
-    },
-    {
-        id: 4,
-        title: 'Ujian Pajajaran',
-        description: 'Waktu lebih terbatas dan kesalahan lebih berpengaruh terhadap skor.',
-        startLevel: 31,
-    },
-    {
-        id: 5,
-        title: 'Pewaris Siliwangi',
-        description: 'Level tersulit dengan teks panjang, target WPM tinggi, dan boss level akhir.',
-        startLevel: 41,
-    },
-];
+import { onMounted, ref } from 'vue';
+import { chapterApi } from '@/services/chapterApi';
+
+const chapters = ref([]);
+const loading = ref(true);
+const error = ref('');
+
+onMounted(async () => {
+    try {
+        chapters.value = await chapterApi.list();
+    } catch (err) {
+        error.value = 'Gagal memuat data BAB. Pastikan server Laravel dan database aktif.';
+    } finally {
+        loading.value = false;
+    }
+});
 </script>

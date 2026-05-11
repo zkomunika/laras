@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 
 import HomeView from '@/views/HomeView.vue';
 import ChaptersView from '@/views/ChaptersView.vue';
+import ChapterDetailView from '@/views/ChapterDetailView.vue';
 import StoryGameView from '@/views/StoryGameView.vue';
 import LeaderboardView from '@/views/LeaderboardView.vue';
 import ProfileView from '@/views/ProfileView.vue';
@@ -17,6 +18,12 @@ const routes = [
         path: '/chapters',
         name: 'chapters',
         component: ChaptersView,
+    },
+    {
+        path: '/chapters/:id',
+        name: 'chapter-detail',
+        component: ChapterDetailView,
+        props: true,
     },
     {
         path: '/story/levels/:id',
