@@ -20,6 +20,10 @@
                     v-for="level in chapter.levels"
                     :key="level.id"
                     class="level-card"
+                    :class="{
+                        'level-locked': !isLevelUnlocked(level),
+                        'level-completed': getProgress(level)?.is_completed,
+                    }"
                 >
                     <span class="chapter-number">
                         Level {{ level.level_number }}
@@ -35,9 +39,33 @@
                         <span v-if="level.is_boss_level">Boss Level</span>
                     </div>
 
-                    <RouterLink :to="`/story/levels/${level.id}`" class="btn btn-primary">
+                    <div v-if="getProgress(level)" class="progress-summary">
+                        <strong>Best Score: {{ getProgress(level).best_score }}</strong>
+                        <span>Best WPM: {{ getProgress(level).best_wpm }}</span>
+                        <span>Best Accuracy: {{ getProgress(level).best_accuracy }}%</span>
+
+                        <div class="stars-mini">
+                            <span
+                                v-for="star in 3"
+                                :key="star"
+                                :class="{ active: star <= getProgress(level).best_stars }"
+                            >
+                                ★
+                            </span>
+                        </div>
+                    </div>
+
+                    <RouterLink
+                        v-if="isLevelUnlocked(level)"
+                        :to="`/story/levels/${level.id}`"
+                        class="btn btn-primary"
+                    >
                         Mainkan
                     </RouterLink>
+
+                    <span v-else class="btn btn-disabled">
+                        Terkunci
+                    </span>
                 </article>
             </div>
         </template>
@@ -47,6 +75,7 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import { chapterApi } from '@/services/chapterApi';
+import { progressApi } from '@/services/progressApi';
 
 const props = defineProps({
     id: {
@@ -56,16 +85,41 @@ const props = defineProps({
 });
 
 const chapter = ref(null);
+const progressMap = ref({});
 const loading = ref(true);
 const error = ref('');
 
 onMounted(async () => {
     try {
-        chapter.value = await chapterApi.detail(props.id);
+        const [chapterData, progressData] = await Promise.all([
+            chapterApi.detail(props.id),
+            progressApi.list(),
+        ]);
+
+        chapter.value = chapterData;
+
+        progressMap.value = progressData.reduce((map, item) => {
+            map[item.level_id] = item;
+            return map;
+        }, {});
     } catch (err) {
         error.value = 'Gagal memuat detail BAB.';
     } finally {
         loading.value = false;
     }
 });
+
+function getProgress(level) {
+    return progressMap.value[level.id] ?? null;
+}
+
+function isLevelUnlocked(level) {
+    if (level.level_number === 1) {
+        return true;
+    }
+
+    const progress = getProgress(level);
+
+    return Boolean(progress?.unlocked_at || progress?.is_completed);
+}
 </script>

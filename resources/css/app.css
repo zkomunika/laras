@@ -494,3 +494,118 @@ h2 {
     color: var(--green);
     font-weight: 800;
 }
+
+.level-locked {
+    opacity: 0.62;
+}
+
+.level-completed {
+    border-color: rgba(31, 93, 67, 0.45);
+}
+
+.progress-summary {
+    display: grid;
+    gap: 0.35rem;
+    padding: 0.85rem;
+    border-radius: 1rem;
+    background: rgba(31, 93, 67, 0.08);
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.progress-summary strong {
+    color: var(--green);
+}
+
+.stars-mini {
+    color: rgba(114, 95, 70, 0.35);
+    font-size: 1.2rem;
+}
+
+.stars-mini span.active {
+    color: var(--accent);
+}
+
+.btn-disabled {
+    background: rgba(114, 95, 70, 0.16);
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+
+.leaderboard-table {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.leaderboard-row {
+    display: grid;
+    grid-template-columns: 0.6fr 1.6fr 1fr 1fr 1.2fr 1fr;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 1rem;
+    border-radius: 1rem;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+}
+
+.leaderboard-head {
+    background: var(--green);
+    color: #fff6df;
+    font-weight: 900;
+}
+
+.profile-panel {
+    display: grid;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 1.5rem;
+    box-shadow: var(--shadow);
+}
+
+.profile-panel p {
+    color: var(--text-muted);
+}
+
+.profile-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.profile-stats div {
+    padding: 1rem;
+    border-radius: 1rem;
+    background: var(--green-soft);
+}
+
+.profile-stats strong {
+    display: block;
+    color: var(--green);
+    font-size: 1.7rem;
+}
+
+.profile-stats span {
+    display: block;
+    color: var(--text-muted);
+    font-weight: 800;
+    margin-top: 0.25rem;
+}
+
+@media (max-width: 900px) {
+    .leaderboard-row {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .profile-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 560px) {
+    .profile-stats {
+        grid-template-columns: 1fr;
+    }
+}
