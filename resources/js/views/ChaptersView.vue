@@ -1,7 +1,7 @@
 <template>
     <section>
         <div class="topbar">
-            <span class="topbar-title">📖 Pilih Bab</span>
+            <span class="topbar-title"><BookOpen :size="18" style="vertical-align:text-bottom"/> Pilih Bab</span>
 
             <div class="topbar-right">
                 <span class="tag-pill">5 BAB</span>
@@ -38,8 +38,8 @@
                             </p>
 
                             <div class="chap-meta">
-                                <span>🎮 {{ chapter.levels_count }} level</span>
-                                <span>📍 Level {{ chapter.start_level }}–{{ chapter.end_level }}</span>
+                                <span><Gamepad2 :size="14" style="vertical-align:middle" /> {{ chapter.levels_count }} level</span>
+                                <span><MapPin :size="14" style="vertical-align:middle" /> Level {{ chapter.start_level }}–{{ chapter.end_level }}</span>
                             </div>
 
                             <div class="chap-progress">
@@ -79,10 +79,10 @@
                         akurasi, dan batas waktu yang meningkat secara bertahap.
                     </p>
 
-                    <div class="detail-meta">🎮 <strong>50 Level</strong></div>
-                    <div class="detail-meta">📖 5 BAB Cerita</div>
-                    <div class="detail-meta">⚔️ Boss level setiap akhir BAB</div>
-                    <div class="detail-meta">🏆 Skor tersimpan ke leaderboard</div>
+                    <div class="detail-meta"><Gamepad2 :size="14" style="vertical-align:middle" /> <strong>50 Level</strong></div>
+                    <div class="detail-meta"><BookOpen :size="14" style="vertical-align:middle" /> 5 BAB Cerita</div>
+                    <div class="detail-meta"><Swords :size="14" style="vertical-align:middle" /> Boss level setiap akhir BAB</div>
+                    <div class="detail-meta"><Trophy :size="14" style="vertical-align:middle" /> Skor tersimpan ke leaderboard</div>
 
                     <div style="margin-top:16px;">
                         <div class="sec-head">Parameter Game</div>
@@ -120,6 +120,7 @@
 import { onMounted, ref } from 'vue';
 import { chapterApi } from '@/services/chapterApi';
 import { progressApi } from '@/services/progressApi';
+import { BookOpen, Gamepad2, MapPin, Swords, Trophy } from 'lucide-vue-next';
 
 const chapters = ref([]);
 const progress = ref([]);

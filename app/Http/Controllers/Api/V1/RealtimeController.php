@@ -85,18 +85,38 @@ class RealtimeController extends Controller
 
         $message->load('user:id,name,email');
 
+        $responseData = [
+            'id' => $message->id,
+            'message' => $message->message,
+            'created_at' => $message->created_at?->format('H:i:s'),
+            'user' => [
+                'id' => $message->user?->id,
+                'name' => $message->user?->name,
+                'email' => $message->user?->email,
+            ],
+        ];
+
+        broadcast(new \App\Events\MessageSent($responseData));
+
         return response()->json([
             'message' => 'Pesan terkirim.',
-            'data' => [
-                'id' => $message->id,
-                'message' => $message->message,
-                'created_at' => $message->created_at?->format('H:i:s'),
-                'user' => [
-                    'id' => $message->user?->id,
-                    'name' => $message->user?->name,
-                    'email' => $message->user?->email,
-                ],
-            ],
+            'data' => $responseData,
         ], 201);
+    }
+
+    public function updateProgress(Request $request)
+    {
+        $request->validate([
+            'progress' => 'required|numeric',
+            'wpm' => 'required|numeric',
+        ]);
+
+        broadcast(new \App\Events\PlayerProgress(
+            $request->user()->id,
+            $request->progress,
+            $request->wpm
+        ));
+
+        return response()->json(['status' => 'ok']);
     }
 }

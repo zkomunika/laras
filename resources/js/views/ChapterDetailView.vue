@@ -2,11 +2,11 @@
     <section>
         <div class="topbar">
             <RouterLink to="/chapters" class="btn btn-secondary topbar-back">
-                ◀ Kembali
+                <ChevronLeft :size="16" style="vertical-align:text-bottom" /> Kembali
             </RouterLink>
 
             <span class="topbar-title">
-                📖 {{ chapter ? `BAB ${chapter.number} · ${chapter.title}` : 'Detail BAB' }}
+                <BookOpen :size="18" style="vertical-align:text-bottom" /> {{ chapter ? `BAB ${chapter.number} · ${chapter.title}` : 'Detail BAB' }}
             </span>
 
             <div class="topbar-right">
@@ -29,8 +29,8 @@
                         <div class="chap-top">
                             <span class="chap-num">BAB {{ chapter.number }}</span>
                             <span class="chap-title">{{ chapter.title }}</span>
-                            <span v-if="completedCount === 10" style="color:var(--green);font-size:13px;">
-                                ✓ Selesai
+                            <span v-if="completedCount === 10" style="color:var(--green);font-size:13px;display:flex;align-items:center;gap:4px;">
+                                <Check :size="14" /> Selesai
                             </span>
                         </div>
 
@@ -45,13 +45,13 @@
                                 class="chap-check"
                                 :class="{ done: getProgress(level)?.is_completed }"
                             >
-                                {{ getProgress(level)?.is_completed ? '✓' : '' }}
+                                <Check v-if="getProgress(level)?.is_completed" :size="12" />
                             </div>
                         </div>
 
                         <div class="chap-meta">
-                            <span>🎯 {{ completedCount }} level selesai</span>
-                            <span>📊 {{ chapter.levels.length }} level tersedia</span>
+                            <span><Target :size="14" style="vertical-align:middle" /> {{ completedCount }} level selesai</span>
+                            <span><BarChart2 :size="14" style="vertical-align:middle" /> {{ chapter.levels.length }} level tersedia</span>
                         </div>
 
                         <div class="chap-progress">
@@ -91,7 +91,7 @@
                                         :key="star"
                                         :class="{ active: star <= (getProgress(level)?.best_stars || 0) }"
                                     >
-                                        ★
+                                        <Star :size="12" :fill="star <= (getProgress(level)?.best_stars || 0) ? 'currentColor' : 'none'" />
                                     </span>
                                 </div>
 
@@ -126,7 +126,7 @@
                                 <div class="level-meta">
                                     <span>Target WPM: {{ level.target_wpm }}</span>
                                     <span>Akurasi: {{ level.min_accuracy }}%</span>
-                                    <span v-if="level.is_boss_level">⚔️ Boss Level</span>
+                                    <span v-if="level.is_boss_level"><Swords :size="14" style="vertical-align:middle" /> Boss Level</span>
                                 </div>
                             </div>
 
@@ -164,10 +164,10 @@
                         {{ chapter.description }}
                     </p>
 
-                    <div class="detail-meta">🎮 <strong>{{ chapter.levels.length }} Level</strong></div>
-                    <div class="detail-meta">⭐ Kesulitan bertahap</div>
-                    <div class="detail-meta">⏱️ Waktu menyesuaikan level</div>
-                    <div class="detail-meta">🏆 Progress tersimpan otomatis</div>
+                    <div class="detail-meta"><Gamepad2 :size="14" style="vertical-align:middle" /> <strong>{{ chapter.levels.length }} Level</strong></div>
+                    <div class="detail-meta"><Star :size="14" style="vertical-align:middle" /> Kesulitan bertahap</div>
+                    <div class="detail-meta"><Timer :size="14" style="vertical-align:middle" /> Waktu menyesuaikan level</div>
+                    <div class="detail-meta"><Trophy :size="14" style="vertical-align:middle" /> Progress tersimpan otomatis</div>
 
                     <div style="margin-top:16px;">
                         <div class="sec-head">Rekomendasi</div>
@@ -175,9 +175,9 @@
                         <RouterLink
                             :to="`/story/levels/${firstPlayableLevel.id}`"
                             class="btn btn-primary"
-                            style="width:100%;"
+                            style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px;"
                         >
-                            ▶️ Mainkan Level
+                            <Play :size="16" /> Mainkan Level
                         </RouterLink>
                     </div>
                 </aside>
@@ -191,6 +191,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { chapterApi } from '@/services/chapterApi';
 import { progressApi } from '@/services/progressApi';
+import { ChevronLeft, BookOpen, Check, Target, BarChart2, Star, Swords, Gamepad2, Timer, Trophy, Play } from 'lucide-vue-next';
 
 const props = defineProps({
     id: {

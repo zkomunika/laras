@@ -1,7 +1,7 @@
 <template>
     <section>
         <div class="topbar">
-            <span class="topbar-title">🏆 Papan Peringkat</span>
+            <span class="topbar-title"><Trophy :size="18" style="vertical-align:text-bottom" /> Papan Peringkat</span>
 
             <div class="topbar-right">
                 <span class="tag-pill">Global</span>
@@ -28,27 +28,27 @@
             <template v-else>
                 <div class="leaderboard-podium">
                     <div v-if="second" class="podium-item">
-                        <div class="podium-medal">🥈</div>
+                        <div class="podium-medal"><Medal :size="24" color="#cbd5e1" /></div>
                         <div class="podium-card second">
-                            <div class="avatar">👤</div>
+                            <UserAvatar :user="second" :size="32" style="margin-bottom:8px" />
                             <strong>{{ second.name }}</strong>
                             <span>{{ formatScore(second.total_score) }} pts</span>
                         </div>
                     </div>
 
                     <div v-if="first" class="podium-item">
-                        <div class="podium-medal first-medal">🥇</div>
+                        <div class="podium-medal first-medal"><Crown :size="28" color="#fbbf24" /></div>
                         <div class="podium-card first">
-                            <div class="avatar pulse">👑</div>
+                            <UserAvatar :user="first" :size="40" style="margin-bottom:8px" class="pulse" />
                             <strong>{{ first.name }}</strong>
                             <span>{{ formatScore(first.total_score) }} pts</span>
                         </div>
                     </div>
 
                     <div v-if="third" class="podium-item">
-                        <div class="podium-medal">🥉</div>
+                        <div class="podium-medal"><Medal :size="24" color="#b45309" /></div>
                         <div class="podium-card third">
-                            <div class="avatar">⚔️</div>
+                            <UserAvatar :user="third" :size="32" style="margin-bottom:8px" />
                             <strong>{{ third.name }}</strong>
                             <span>{{ formatScore(third.total_score) }} pts</span>
                         </div>
@@ -67,8 +67,8 @@
                             {{ medal(player.rank) }}
                         </span>
 
-                        <div class="lb-avatar-sm">
-                            👤
+                        <div class="lb-avatar-sm" style="background:transparent; padding:0;">
+                            <UserAvatar :user="player" :size="16" />
                         </div>
 
                         <div class="lb-name">
@@ -91,6 +91,8 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import { leaderboardApi } from '@/services/leaderboardApi';
+import { Trophy, Crown, Medal, User, Sword } from 'lucide-vue-next';
+import UserAvatar from '@/components/UserAvatar.vue';
 
 const leaderboard = ref([]);
 const loading = ref(true);

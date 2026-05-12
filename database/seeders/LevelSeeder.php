@@ -73,11 +73,23 @@ class LevelSeeder extends Seeder
         ];
 
         foreach ($levels as $item) {
-            [$chapterNumber, $levelNumber, $title, $targetText, $targetWpm, $minAccuracy, $timeLimit, $maxMistakes] = $item;
+            [$chapterNumber, $levelNumber, $title, $targetText, $oldWpm, $minAccuracy, $oldTimeLimit, $maxMistakes] = $item;
 
             $chapter = Chapter::where('number', $chapterNumber)->firstOrFail();
 
             $isBossLevel = $levelNumber % 10 === 0;
+
+            // Recalculate reasonable WPM and Time Limit based on difficulty and string length.
+            // A word is ~5 characters.
+            $wordCount = max(1, strlen($targetText) / 5);
+            
+            // Scaled WPM from 15 (Level 1) to 65 (Level 50)
+            $targetWpm = (int) round(15 + (($levelNumber - 1) / 49) * 50);
+            
+            // Time limit based on how long it should take at target WPM + buffer
+            $expectedMinutes = $wordCount / max(1, $targetWpm);
+            $bufferSeconds = 30 - (($levelNumber - 1) / 49) * 20; // 30s buffer at lvl 1, 10s buffer at lvl 50
+            $timeLimit = (int) round(($expectedMinutes * 60) + $bufferSeconds);
 
             Level::updateOrCreate(
                 ['level_number' => $levelNumber],

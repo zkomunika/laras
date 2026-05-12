@@ -1,7 +1,7 @@
 <template>
     <section>
         <div class="topbar">
-            <span class="topbar-title">👤 Profil Saya</span>
+            <span class="topbar-title"><User :size="18" style="vertical-align:text-bottom" /> Profil Saya</span>
 
             <div class="topbar-right">
                 <span class="tag-pill">Story Mode</span>
@@ -21,7 +21,9 @@
             <template v-else>
                 <div class="card">
                     <div class="profile-big">
-                        <div class="avatar-lg pulse">👤</div>
+                        <div class="avatar-lg pulse" style="background:transparent; padding:0;">
+                            <UserAvatar :user="profile.user" :size="48" />
+                        </div>
 
                         <div class="profile-details">
                             <h2>{{ profile.user.name }}</h2>
@@ -35,10 +37,10 @@
                             </div>
 
                             <div class="badge-row">
-                                <span class="badge">🎮 {{ profile.stats.completed_levels }} Level</span>
-                                <span class="badge">⭐ {{ formatScore(profile.stats.total_score) }} pts</span>
-                                <span class="badge teal">⚡ {{ profile.stats.best_wpm }} WPM</span>
-                                <span class="badge">📊 {{ profile.stats.average_accuracy }}%</span>
+                                <span class="badge"><Gamepad2 :size="14" style="vertical-align:middle" /> {{ profile.stats.completed_levels }} Level</span>
+                                <span class="badge"><Star :size="14" style="vertical-align:middle" /> {{ formatScore(profile.stats.total_score) }} pts</span>
+                                <span class="badge teal"><Zap :size="14" style="vertical-align:middle" /> {{ profile.stats.best_wpm }} WPM</span>
+                                <span class="badge"><BarChart2 :size="14" style="vertical-align:middle" /> {{ profile.stats.average_accuracy }}%</span>
                             </div>
                         </div>
                     </div>
@@ -79,7 +81,7 @@
                 </div>
 
                 <div class="card">
-                    <div class="sec-head">📈 Progress Aksara</div>
+                    <div class="sec-head"><TrendingUp :size="18" style="vertical-align:text-bottom" /> Progress Aksara</div>
 
                     <div class="chart-bar-row">
                         <span class="chart-bar-label">Level</span>
@@ -116,10 +118,10 @@
                 </div>
 
                 <div class="card">
-                    <div class="sec-head">🏅 Achievement</div>
+                    <div class="sec-head"><Medal :size="18" style="vertical-align:text-bottom" /> Achievement</div>
 
                     <div class="ach-item">
-                        <div class="ach-icon">🏅</div>
+                        <div class="ach-icon"><Medal :size="24" /></div>
                         <div>
                             <div class="ach-name">Pengguna Baru</div>
                             <div class="ach-sub">Berhasil membuat akun LARAS</div>
@@ -128,7 +130,7 @@
                     </div>
 
                     <div class="ach-item" :style="{ opacity: profile.stats.completed_levels > 0 ? 1 : 0.45 }">
-                        <div class="ach-icon">⚡</div>
+                        <div class="ach-icon"><Zap :size="24" /></div>
                         <div>
                             <div class="ach-name">Langkah Pertama</div>
                             <div class="ach-sub">Selesaikan minimal satu level</div>
@@ -139,7 +141,7 @@
                     </div>
 
                     <div class="ach-item" :style="{ opacity: profile.stats.completed_levels >= 10 ? 1 : 0.45 }">
-                        <div class="ach-icon">👑</div>
+                        <div class="ach-icon"><Crown :size="24" /></div>
                         <div>
                             <div class="ach-name">Penjaga Bab Awal</div>
                             <div class="ach-sub">Selesaikan 10 level pertama</div>
@@ -157,6 +159,8 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import { profileApi } from '@/services/profileApi';
+import { User, Gamepad2, Star, Zap, BarChart2, TrendingUp, Medal, Crown } from 'lucide-vue-next';
+import UserAvatar from '@/components/UserAvatar.vue';
 
 const profile = ref(null);
 const loading = ref(true);

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
     <section class="page-section">
         <div v-if="loading" class="empty-state">
             Memuat level...
@@ -11,7 +11,7 @@
         <template v-else>
             <div>
                 <p class="eyebrow">
-                    BAB {{ level.chapter?.number }} — Story Game
+                    BAB {{ level.chapter?.number }} ΓÇö Story Game
                 </p>
 
                 <h1>Level {{ level.level_number }}</h1>
@@ -22,62 +22,14 @@
             </div>
 
             <div class="game-panel">
-                <div class="game-dashboard">
-                    <div class="dash-card" :class="{'active-dash': status === 'playing'}">
-                        <Activity :size="20" class="dash-icon" />
-                        <div class="dash-info">
-                            <span class="dash-label">Status</span>
-                            <span class="dash-value">{{ statusLabel }}</span>
-                        </div>
-                    </div>
-                    
-                    <div class="dash-card">
-                        <Target :size="20" class="dash-icon" />
-                        <div class="dash-info">
-                            <span class="dash-label">Target WPM</span>
-                            <span class="dash-value">{{ level.target_wpm }}</span>
-                        </div>
-                    </div>
-
-                    <div class="dash-card" :class="{'warning-dash': remainingSeconds < 10 && status === 'playing'}">
-                        <Timer :size="20" class="dash-icon" />
-                        <div class="dash-info">
-                            <span class="dash-label">Sisa Waktu</span>
-                            <span class="dash-value">{{ remainingSeconds }}s</span>
-                        </div>
-                    </div>
-
-                    <div class="dash-card">
-                        <Zap :size="20" class="dash-icon" :color="wpm >= level.target_wpm ? '#10b981' : 'currentColor'" />
-                        <div class="dash-info">
-                            <span class="dash-label">WPM Saat Ini</span>
-                            <span class="dash-value">{{ wpm }}</span>
-                        </div>
-                    </div>
-
-                    <div class="dash-card">
-                        <BarChart2 :size="20" class="dash-icon" :color="accuracy >= level.min_accuracy ? '#10b981' : '#ef4444'" />
-                        <div class="dash-info">
-                            <span class="dash-label">Akurasi</span>
-                            <span class="dash-value">{{ accuracy }}%</span>
-                        </div>
-                    </div>
-
-                    <div class="dash-card">
-                        <AlertCircle :size="20" class="dash-icon" :color="mistakes > 0 ? '#ef4444' : 'currentColor'" />
-                        <div class="dash-info">
-                            <span class="dash-label">Kesalahan</span>
-                            <span class="dash-value">{{ mistakes }}</span>
-                        </div>
-                    </div>
-
-                    <div class="dash-card highlight-dash">
-                        <Trophy :size="20" class="dash-icon" color="#fbbf24" />
-                        <div class="dash-info">
-                            <span class="dash-label">Skor Sementara</span>
-                            <span class="dash-value" style="color: #fbbf24;">{{ score }}</span>
-                        </div>
-                    </div>
+                <div class="game-stat-row">
+                    <span>Status: {{ statusLabel }}</span>
+                    <span>Target WPM: {{ level.target_wpm }}</span>
+                    <span>Waktu: {{ remainingSeconds }} detik</span>
+                    <span>WPM: {{ wpm }}</span>
+                    <span>Akurasi: {{ accuracy }}%</span>
+                    <span>Kesalahan: {{ mistakes }}</span>
+                    <span>Skor: {{ score }}</span>
                 </div>
 
                 <div class="target-text-box">
@@ -137,7 +89,7 @@
                             :key="star"
                             :class="{ active: star <= (serverResult?.stars ?? stars) }"
                         >
-                            <Star :size="24" :fill="star <= (serverResult?.stars ?? stars) ? 'currentColor' : 'none'" />
+                            Γÿà
                         </span>
                     </div>
 
@@ -151,14 +103,7 @@
                 </div>
 
                 <div class="game-actions">
-                    <RouterLink
-                        v-if="status === 'finished' && level?.next_level_id"
-                        :to="`/story/levels/${level.next_level_id}`"
-                        class="btn btn-primary"
-                    >
-                        Lanjut Level Berikutnya
-                    </RouterLink>
-                    <button v-else type="button" class="btn btn-primary" @click="handleResetGame">
+                    <button type="button" class="btn btn-primary" @click="handleResetGame">
                         Ulangi Level
                     </button>
 
@@ -176,9 +121,6 @@ import { onMounted, ref, watch } from 'vue';
 import { levelApi } from '@/services/levelApi';
 import { gameApi } from '@/services/gameApi';
 import { useTypingGame } from '@/composables/useTypingGame';
-import { Star, Activity, Target, Timer, Zap, BarChart2, AlertCircle, Trophy } from 'lucide-vue-next';
-import { realtimeApi } from '@/services/realtimeApi';
-import { soundService } from '@/services/soundService';
 
 const props = defineProps({
     id: {
@@ -198,7 +140,6 @@ const submitMessage = ref('');
 const resultSubmitted = ref(false);
 
 let startPromise = null;
-let updateTimeout = null;
 
 const {
     targetText,
@@ -250,32 +191,15 @@ function ensureServerAttemptStarted() {
 }
 
 function handleTypingInput(event) {
-    if (status.value === 'idle') {
-        soundService.play('start');
-    }
-
     ensureServerAttemptStarted();
 
     updateTypedText(event.target.value);
     event.target.value = typedText.value;
-
-    // Broadcast progress to realtime channel
-    clearTimeout(updateTimeout);
-    updateTimeout = setTimeout(() => {
-        const progress = Math.min(100, Math.round((typedText.value.length / targetText.value.length) * 100));
-        realtimeApi.updateProgress(progress, wpm.value).catch(() => {});
-    }, 200);
 }
 
 watch(status, async (newStatus) => {
     if (!['finished', 'failed'].includes(newStatus)) {
         return;
-    }
-
-    if (newStatus === 'finished') {
-        soundService.play('finish');
-    } else {
-        soundService.play('wrong');
     }
 
     if (resultSubmitted.value) {
@@ -296,9 +220,6 @@ watch(status, async (newStatus) => {
         }
 
         serverResult.value = await gameApi.submit(attemptId.value, typedText.value);
-        if (serverResult.value.stars > 0) {
-            soundService.play('levelUp');
-        }
         submitMessage.value = 'Hasil berhasil disimpan ke database.';
     } catch (err) {
         submitMessage.value = 'Hasil belum berhasil disimpan. Cek server atau API.';
@@ -308,7 +229,6 @@ watch(status, async (newStatus) => {
 });
 
 function handleResetGame() {
-    soundService.play('click');
     attemptId.value = null;
     serverResult.value = null;
     submitMessage.value = '';
@@ -319,79 +239,3 @@ function handleResetGame() {
     resetGame();
 }
 </script>
-
-<style scoped>
-.game-dashboard {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 24px;
-}
-
-.dash-card {
-    flex: 1 1 calc(25% - 12px);
-    min-width: 130px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 12px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    transition: all 0.3s ease;
-}
-
-.dash-icon {
-    color: var(--text2);
-}
-
-.dash-info {
-    display: flex;
-    flex-direction: column;
-}
-
-.dash-label {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--muted);
-    font-weight: 600;
-}
-
-.dash-value {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text1);
-    line-height: 1.2;
-}
-
-.active-dash {
-    border-color: var(--teal);
-    background: rgba(45, 212, 191, 0.05);
-}
-
-.active-dash .dash-icon {
-    color: var(--teal);
-}
-
-.warning-dash {
-    border-color: #ef4444;
-    animation: pulse-danger 1s infinite;
-}
-
-.warning-dash .dash-icon,
-.warning-dash .dash-value {
-    color: #ef4444;
-}
-
-.highlight-dash {
-    background: rgba(251, 191, 36, 0.05);
-    border-color: rgba(251, 191, 36, 0.3);
-}
-
-@keyframes pulse-danger {
-    0% { opacity: 1; }
-    50% { opacity: 0.7; transform: scale(0.98); }
-    100% { opacity: 1; }
-}
-</style>

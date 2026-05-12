@@ -27,4 +27,11 @@ export const realtimeApi = {
 
         return response.data.data;
     },
+
+    async updateProgress(progress, wpm) {
+        await api.post('/realtime/progress', {
+            progress,
+            wpm
+        });
+    }
 };

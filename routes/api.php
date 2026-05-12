@@ -45,5 +45,6 @@ Route::prefix('v1')->group(function () {
         Route::get('/realtime/online-users', [RealtimeController::class, 'onlineUsers']);
         Route::get('/realtime/messages', [RealtimeController::class, 'messages']);
         Route::post('/realtime/messages', [RealtimeController::class, 'sendMessage']);
+        Route::post('/realtime/progress', [RealtimeController::class, 'updateProgress']);
     });
 });

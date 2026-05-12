@@ -22,6 +22,7 @@ class LevelResource extends JsonResource
             'max_mistakes' => $this->max_mistakes,
             'is_boss_level' => $this->is_boss_level,
             'sort_order' => $this->sort_order,
+            'next_level_id' => \App\Models\Level::where('level_number', '>', $this->level_number)->orderBy('level_number', 'asc')->value('id'),
             'chapter' => new ChapterResource($this->whenLoaded('chapter')),
         ];
     }

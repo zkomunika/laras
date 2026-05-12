@@ -2,7 +2,7 @@
     <div class="auth-wrap">
         <div class="auth-card">
             <div class="auth-logo">
-                <div style="font-size:36px;margin-bottom:8px;">⚔️</div>
+                <div style="margin-bottom:8px; display: flex; justify-content: center;"><Sword :size="36" /></div>
                 <h1>LARAS</h1>
                 <p>Ladang Aksara Siliwangi</p>
                 <p style="margin-top:4px;font-size:12px;">
@@ -66,6 +66,7 @@
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
+import { Sword } from 'lucide-vue-next';
 
 const router = useRouter();
 const auth = useAuthStore();
