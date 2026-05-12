@@ -16,4 +16,10 @@ export default defineConfig({
             '@': fileURLToPath(new URL('./resources/js', import.meta.url)),
         },
     },
+    server: {
+        proxy: {
+            '/api': 'http://127.0.0.1:8000',
+            '/sanctum': 'http://127.0.0.1:8000',
+        },
+    },
 });

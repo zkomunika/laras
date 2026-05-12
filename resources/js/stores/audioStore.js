@@ -1,8 +1,4 @@
 import { defineStore } from 'pinia';
-import { soundService } from '@/services/soundService.js';
-
-soundService.playBGM();
-
 const AUDIO_STORAGE_KEY = 'laras.audio';
 
 function safeParse(value, fallback) {

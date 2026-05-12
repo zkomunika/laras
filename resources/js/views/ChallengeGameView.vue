@@ -16,8 +16,8 @@
             <div v-else-if="room" class="challenge-game-grid">
                 <main class="game-panel">
                     <div class="game-header">
-                        <div class="timer-circle" :class="{ danger: remainingSeconds <= 10 }">
-                            {{ remainingSeconds }}
+                        <div class="timer-circle" :class="{ danger: remainingSeconds !== null && remainingSeconds <= 10 }">
+                            {{ remainingSeconds ?? '∞' }}
                         </div>
                         <div class="game-stats">
                             <div class="game-stat">
@@ -159,7 +159,7 @@ const targetCharacters = computed(() => Array.from(targetText.value));
 const targetLength = computed(() => targetText.value.length || 1);
 const progressPercent = computed(() => Math.min(100, Math.round((typedText.value.length / targetLength.value) * 100)));
 const limitSeconds = computed(() => Number(room.value?.level?.time_limit_seconds || 0));
-const remainingSeconds = computed(() => Math.max(0, limitSeconds.value - elapsedSeconds.value));
+const remainingSeconds = computed(() => (limitSeconds.value > 0 ? Math.max(0, limitSeconds.value - elapsedSeconds.value) : null));
 
 const mistakes = computed(() => {
     const max = Math.max(typedText.value.length, targetText.value.length);
@@ -273,7 +273,7 @@ async function submitResult() {
 }
 
 watch(remainingSeconds, (value) => {
-    if (value === 0 && !submitted.value && room.value?.status === 'playing') {
+    if (value === 0 && limitSeconds.value > 0 && !submitted.value && room.value?.status === 'playing') {
         submitResult();
     }
 });
