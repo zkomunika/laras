@@ -39,9 +39,28 @@ export const useAuthStore = defineStore('auth', {
             this.setSession(data);
         },
 
+        async checkSession() {
+            if (!this.token) {
+                this.clearSession();
+                return false;
+            }
+
+            try {
+                const user = await authApi.me();
+                this.user = user;
+                localStorage.setItem('laras_user', JSON.stringify(user));
+                return true;
+            } catch (error) {
+                this.clearSession();
+                return false;
+            }
+        },
+
         async logout() {
             try {
-                await authApi.logout();
+                if (this.token) {
+                    await authApi.logout();
+                }
             } finally {
                 this.clearSession();
             }

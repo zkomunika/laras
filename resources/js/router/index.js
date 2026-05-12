@@ -11,6 +11,11 @@ import LoginView from "@/views/LoginView.vue";
 import RegisterView from "@/views/RegisterView.vue";
 import { useAuthStore } from "@/stores/authStore";
 import RealtimeView from "@/views/RealtimeView.vue";
+import SettingsView from "@/views/SettingsView.vue";
+import ChallengeLobbyView from "@/views/ChallengeLobbyView.vue";
+import ChallengeWaitingRoomView from "@/views/ChallengeWaitingRoomView.vue";
+import ChallengeGameView from "@/views/ChallengeGameView.vue";
+import ChallengeResultView from "@/views/ChallengeResultView.vue";
 
 const routes = [
     {
@@ -36,6 +41,34 @@ const routes = [
         name: "story-game",
         meta: { requiresAuth: true },
         component: StoryGameView,
+        props: true,
+    },
+
+    {
+        path: "/challenge",
+        name: "challenge-lobby",
+        component: ChallengeLobbyView,
+        meta: { requiresAuth: true },
+    },
+    {
+        path: "/challenge/rooms/:id",
+        name: "challenge-waiting-room",
+        component: ChallengeWaitingRoomView,
+        meta: { requiresAuth: true },
+        props: true,
+    },
+    {
+        path: "/challenge/rooms/:id/game",
+        name: "challenge-game",
+        component: ChallengeGameView,
+        meta: { requiresAuth: true },
+        props: true,
+    },
+    {
+        path: "/challenge/rooms/:id/results",
+        name: "challenge-result",
+        component: ChallengeResultView,
+        meta: { requiresAuth: true },
         props: true,
     },
     {
@@ -69,6 +102,12 @@ const routes = [
         path: "/realtime",
         name: "realtime",
         component: RealtimeView,
+        meta: { requiresAuth: true },
+    },
+    {
+        path: "/settings",
+        name: "settings",
+        component: SettingsView,
         meta: { requiresAuth: true },
     },
 ];

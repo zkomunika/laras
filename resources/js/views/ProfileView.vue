@@ -5,7 +5,7 @@
 
             <div class="topbar-right">
                 <span class="tag-pill">Story Mode</span>
-                <span class="tag-pill teal">Progress</span>
+                <span class="tag-pill teal">Achievement</span>
             </div>
         </div>
 
@@ -38,7 +38,10 @@
                                 <span class="badge">🎮 {{ profile.stats.completed_levels }} Level</span>
                                 <span class="badge">⭐ {{ formatScore(profile.stats.total_score) }} pts</span>
                                 <span class="badge teal">⚡ {{ profile.stats.best_wpm }} WPM</span>
-                                <span class="badge">📊 {{ profile.stats.average_accuracy }}%</span>
+                                <span class="badge">🏅 {{ profile.stats.achievement_unlocked }} / {{ profile.stats.achievement_total }}</span>
+                                <span v-if="profile.stats.unread_notifications" class="badge teal">
+                                    🔔 {{ profile.stats.unread_notifications }} Baru
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -68,8 +71,8 @@
                     </div>
 
                     <div class="stat-block">
-                        <span class="stat-val">{{ profile.stats.unlocked_levels }}</span>
-                        <div class="stat-lbl">Level Terbuka</div>
+                        <span class="stat-val">{{ profile.stats.total_stars }}</span>
+                        <div class="stat-lbl">Total Bintang</div>
                     </div>
 
                     <div class="stat-block">
@@ -115,38 +118,44 @@
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="sec-head">🏅 Achievement</div>
+                <div class="profile-two-column">
+                    <div class="card">
+                        <div class="sec-head">🏅 Achievement</div>
 
-                    <div class="ach-item">
-                        <div class="ach-icon">🏅</div>
-                        <div>
-                            <div class="ach-name">Pengguna Baru</div>
-                            <div class="ach-sub">Berhasil membuat akun LARAS</div>
+                        <div
+                            v-for="achievement in profile.achievements"
+                            :key="achievement.code"
+                            class="ach-item"
+                            :class="{ locked: !achievement.unlocked }"
+                        >
+                            <div class="ach-icon">{{ achievement.icon }}</div>
+                            <div>
+                                <div class="ach-name">{{ achievement.name }}</div>
+                                <div class="ach-sub">{{ achievement.description }}</div>
+                            </div>
+                            <span class="ach-badge" :class="{ locked: !achievement.unlocked }">
+                                {{ achievement.unlocked ? '✓ Diperoleh' : 'Terkunci' }}
+                            </span>
                         </div>
-                        <span class="ach-badge">✓ Diperoleh</span>
                     </div>
 
-                    <div class="ach-item" :style="{ opacity: profile.stats.completed_levels > 0 ? 1 : 0.45 }">
-                        <div class="ach-icon">⚡</div>
-                        <div>
-                            <div class="ach-name">Langkah Pertama</div>
-                            <div class="ach-sub">Selesaikan minimal satu level</div>
-                        </div>
-                        <span class="ach-badge">
-                            {{ profile.stats.completed_levels > 0 ? '✓ Diperoleh' : 'Terkunci' }}
-                        </span>
-                    </div>
+                    <div class="card">
+                        <div class="sec-head">🔔 Notifikasi Terbaru</div>
 
-                    <div class="ach-item" :style="{ opacity: profile.stats.completed_levels >= 10 ? 1 : 0.45 }">
-                        <div class="ach-icon">👑</div>
-                        <div>
-                            <div class="ach-name">Penjaga Bab Awal</div>
-                            <div class="ach-sub">Selesaikan 10 level pertama</div>
+                        <div v-if="!profile.recent_notifications.length" class="empty-mini">
+                            Belum ada notifikasi.
                         </div>
-                        <span class="ach-badge">
-                            {{ profile.stats.completed_levels >= 10 ? '✓ Diperoleh' : 'Terkunci' }}
-                        </span>
+
+                        <div
+                            v-for="notification in profile.recent_notifications"
+                            :key="notification.id"
+                            class="notif-item"
+                            :class="{ unread: !notification.read_at }"
+                        >
+                            <div class="notif-title">{{ notification.title }}</div>
+                            <div class="notif-message">{{ notification.message }}</div>
+                            <div class="notif-time">{{ formatDate(notification.created_at) }}</div>
+                        </div>
                     </div>
                 </div>
             </template>
@@ -186,5 +195,18 @@ onMounted(async () => {
 
 function formatScore(value) {
     return Number(value || 0).toLocaleString('id-ID');
+}
+
+function formatDate(value) {
+    if (!value) {
+        return '-';
+    }
+
+    return new Intl.DateTimeFormat('id-ID', {
+        day: '2-digit',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+    }).format(new Date(value));
 }
 </script>

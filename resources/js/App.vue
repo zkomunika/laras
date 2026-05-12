@@ -23,6 +23,16 @@
                 <span class="tooltip">Bermain</span>
             </RouterLink>
 
+            <RouterLink
+                v-if="auth.isAuthenticated"
+                to="/challenge"
+                class="nav-btn"
+                title="Challenge"
+            >
+                ⚔️
+                <span class="tooltip">Challenge</span>
+            </RouterLink>
+
             <RouterLink to="/leaderboard" class="nav-btn" title="Leaderboard">
                 🏆
                 <span class="tooltip">Papan Peringkat</span>
@@ -36,6 +46,16 @@
             >
                 💬
                 <span class="tooltip">Realtime</span>
+            </RouterLink>
+
+            <RouterLink
+                v-if="auth.isAuthenticated"
+                to="/settings"
+                class="nav-btn"
+                title="Settings"
+            >
+                ⚙️
+                <span class="tooltip">Settings</span>
             </RouterLink>
 
             <div class="sidebar-bottom">
@@ -79,16 +99,41 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, onBeforeUnmount, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
+import { useThemeStore } from '@/stores/themeStore';
+import { useAudioStore } from '@/stores/audioStore';
 
 const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
+const theme = useThemeStore();
+const audio = useAudioStore();
 
 const isAuthPage = computed(() => {
     return ['login', 'register'].includes(route.name);
+});
+
+function handleSessionExpired() {
+    auth.clearSession();
+    if (!['login', 'register'].includes(route.name)) {
+        router.push('/login');
+    }
+}
+
+onMounted(async () => {
+    theme.init();
+    audio.init();
+    window.addEventListener('laras:session-expired', handleSessionExpired);
+
+    if (auth.token) {
+        await auth.checkSession();
+    }
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('laras:session-expired', handleSessionExpired);
 });
 
 async function handleLogout() {

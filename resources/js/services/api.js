@@ -17,4 +17,17 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            localStorage.removeItem('laras_user');
+            localStorage.removeItem('laras_token');
+            window.dispatchEvent(new CustomEvent('laras:session-expired'));
+        }
+
+        return Promise.reject(error);
+    }
+);
+
 export default api;

@@ -14,29 +14,32 @@ class TypingGameService
 
         $typedLength = mb_strlen($typedText);
         $targetLength = mb_strlen($targetText);
+        $comparisonLength = max($typedLength, $targetLength);
 
         $correctChars = 0;
         $wrongChars = 0;
 
-        for ($i = 0; $i < $typedLength; $i++) {
-            $typedChar = mb_substr($typedText, $i, 1);
-            $targetChar = $i < $targetLength ? mb_substr($targetText, $i, 1) : '';
+        for ($i = 0; $i < $comparisonLength; $i++) {
+            $typedChar = $i < $typedLength ? mb_substr($typedText, $i, 1) : null;
+            $targetChar = $i < $targetLength ? mb_substr($targetText, $i, 1) : null;
 
-            if ($typedChar === $targetChar) {
+            if ($typedChar !== null && $typedChar === $targetChar) {
                 $correctChars++;
-            } else {
-                $wrongChars++;
+                continue;
             }
+
+            $wrongChars++;
         }
 
         $finishedAt = now();
         $startedAt = $attempt->started_at ?? now();
 
         $durationMs = max(1000, $finishedAt->diffInMilliseconds($startedAt));
+        $durationSeconds = $durationMs / 1000;
         $durationMinutes = $durationMs / 60000;
 
-        $accuracy = $typedLength > 0
-            ? round(($correctChars / $typedLength) * 100, 2)
+        $accuracy = $comparisonLength > 0
+            ? round(($correctChars / $comparisonLength) * 100, 2)
             : 0;
 
         $wpm = $durationMinutes > 0
@@ -44,14 +47,35 @@ class TypingGameService
             : 0;
 
         $mistakes = $wrongChars;
-        $completed = $typedText === $targetText;
+        $exactTextMatch = $typedText === $targetText;
+        $withinTimeLimit = $level->time_limit_seconds === null
+            || $durationSeconds <= (float) $level->time_limit_seconds;
+        $withinMistakeLimit = $level->max_mistakes === null
+            || $mistakes <= (int) $level->max_mistakes;
+        $meetsAccuracy = $accuracy >= (float) $level->min_accuracy;
+        $meetsWpm = $wpm >= (float) $level->target_wpm;
 
-        $score = max(
-            0,
-            (int) round(($wpm * 10) + ($accuracy * 5) - ($mistakes * 2))
+        $passedRequirements = [
+            'exact_text_match' => $exactTextMatch,
+            'within_time_limit' => $withinTimeLimit,
+            'within_mistake_limit' => $withinMistakeLimit,
+            'meets_accuracy' => $meetsAccuracy,
+            'meets_wpm' => $meetsWpm,
+        ];
+
+        $failedRules = $this->failedRules($passedRequirements);
+        $completed = count($failedRules) === 0;
+
+        $score = $this->calculateScore(
+            $completed,
+            $wpm,
+            $accuracy,
+            $mistakes,
+            $durationSeconds,
+            $level
         );
 
-        $stars = $this->calculateStars($completed, $wpm, $accuracy, $level);
+        $stars = $this->calculateStars($completed, $wpm, $accuracy, $mistakes, $durationSeconds, $level);
 
         return [
             'typed_text' => $typedText,
@@ -65,6 +89,14 @@ class TypingGameService
             'completed' => $completed,
             'duration_ms' => $durationMs,
             'finished_at' => $finishedAt,
+            'meta' => [
+                'passed_requirements' => $passedRequirements,
+                'failed_rules' => $failedRules,
+                'target_wpm' => (float) $level->target_wpm,
+                'min_accuracy' => (float) $level->min_accuracy,
+                'time_limit_seconds' => $level->time_limit_seconds,
+                'max_mistakes' => $level->max_mistakes,
+            ],
         ];
     }
 
@@ -102,21 +134,88 @@ class TypingGameService
         return $progress;
     }
 
-    private function calculateStars(bool $completed, float $wpm, float $accuracy, Level $level): int
-    {
+    private function calculateScore(
+        bool $completed,
+        float $wpm,
+        float $accuracy,
+        int $mistakes,
+        float $durationSeconds,
+        Level $level
+    ): int {
+        if (!$completed) {
+            return max(0, (int) round(($wpm * 4) + ($accuracy * 2) - ($mistakes * 5)));
+        }
+
+        $timeBonus = 0;
+
+        if ($level->time_limit_seconds) {
+            $remainingSeconds = max(0, (float) $level->time_limit_seconds - $durationSeconds);
+            $timeBonus = $remainingSeconds * 2;
+        }
+
+        $targetBonus = max(0, $wpm - (float) $level->target_wpm) * 8;
+        $accuracyBonus = max(0, $accuracy - (float) $level->min_accuracy) * 4;
+        $mistakePenalty = $mistakes * 6;
+
+        return max(
+            0,
+            (int) round(500 + ($wpm * 10) + $targetBonus + $accuracyBonus + $timeBonus - $mistakePenalty)
+        );
+    }
+
+    private function calculateStars(
+        bool $completed,
+        float $wpm,
+        float $accuracy,
+        int $mistakes,
+        float $durationSeconds,
+        Level $level
+    ): int {
         if (!$completed) {
             return 0;
         }
 
-        if ($wpm >= $level->target_wpm && $accuracy >= 95) {
+        $timeLimit = $level->time_limit_seconds ? (float) $level->time_limit_seconds : null;
+        $fastEnough = $timeLimit === null || $durationSeconds <= ($timeLimit * 0.85);
+
+        if (
+            $wpm >= ((float) $level->target_wpm * 1.15)
+            && $accuracy >= 95
+            && $mistakes === 0
+            && $fastEnough
+        ) {
             return 3;
         }
 
-        if ($wpm >= ($level->target_wpm * 0.8) && $accuracy >= $level->min_accuracy) {
+        if ($wpm >= (float) $level->target_wpm && $accuracy >= ((float) $level->min_accuracy + 5)) {
             return 2;
         }
 
         return 1;
+    }
+
+    private function failedRules(array $passedRequirements): array
+    {
+        $labels = [
+            'exact_text_match' => 'Teks belum sama persis dengan target.',
+            'within_time_limit' => 'Durasi melewati batas waktu level.',
+            'within_mistake_limit' => 'Jumlah kesalahan melewati batas maksimal.',
+            'meets_accuracy' => 'Akurasi belum mencapai minimum level.',
+            'meets_wpm' => 'WPM belum mencapai target level.',
+        ];
+
+        $failedRules = [];
+
+        foreach ($passedRequirements as $key => $passed) {
+            if (!$passed) {
+                $failedRules[] = [
+                    'code' => $key,
+                    'message' => $labels[$key],
+                ];
+            }
+        }
+
+        return $failedRules;
     }
 
     private function unlockNextLevel(TypingAttempt $attempt): void

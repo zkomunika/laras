@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             ChapterSeeder::class,
             LevelSeeder::class,
+            AchievementSeeder::class,
         ]);
     }
 }

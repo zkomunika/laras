@@ -5,6 +5,7 @@ export function useTypingGame() {
     const targetWpm = ref(0);
     const minAccuracy = ref(80);
     const timeLimitSeconds = ref(null);
+    const maxMistakes = ref(null);
 
     const typedText = ref('');
     const status = ref('idle');
@@ -32,14 +33,20 @@ export function useTypingGame() {
         return Math.max(typedText.value.length - correctChars.value, 0);
     });
 
+    const missingChars = computed(() => {
+        return Math.max(targetText.value.length - typedText.value.length, 0);
+    });
+
     const mistakes = computed(() => wrongChars.value);
 
+    const officialMistakeEstimate = computed(() => wrongChars.value + missingChars.value);
+
     const accuracy = computed(() => {
-        if (typedText.value.length === 0) {
-            return 100;
+        if (targetText.value.length === 0) {
+            return 0;
         }
 
-        return Number(((correctChars.value / typedText.value.length) * 100).toFixed(2));
+        return Number(((correctChars.value / targetText.value.length) * 100).toFixed(2));
     });
 
     const wpm = computed(() => {
@@ -52,7 +59,7 @@ export function useTypingGame() {
     });
 
     const score = computed(() => {
-        const rawScore = Math.round((wpm.value * 10) + (accuracy.value * 5) - (mistakes.value * 2));
+        const rawScore = Math.round((wpm.value * 10) + (accuracy.value * 5) - (officialMistakeEstimate.value * 2));
         return Math.max(rawScore, 0);
     });
 
@@ -65,11 +72,11 @@ export function useTypingGame() {
             return 0;
         }
 
-        if (wpm.value >= targetWpm.value && accuracy.value >= 95) {
+        if (wpm.value >= targetWpm.value * 1.15 && accuracy.value >= 95 && mistakes.value === 0) {
             return 3;
         }
 
-        if (wpm.value >= targetWpm.value * 0.8 && accuracy.value >= minAccuracy.value) {
+        if (wpm.value >= targetWpm.value && accuracy.value >= minAccuracy.value + 5) {
             return 2;
         }
 
@@ -93,7 +100,7 @@ export function useTypingGame() {
             idle: 'Belum mulai',
             playing: 'Bermain',
             finished: 'Selesai',
-            failed: 'Waktu habis',
+            failed: 'Gagal',
         };
 
         return labels[status.value] ?? 'Belum mulai';
@@ -105,6 +112,9 @@ export function useTypingGame() {
         minAccuracy.value = Number(level?.min_accuracy ?? 80);
         timeLimitSeconds.value = level?.time_limit_seconds
             ? Number(level.time_limit_seconds)
+            : null;
+        maxMistakes.value = level?.max_mistakes !== null && level?.max_mistakes !== undefined
+            ? Number(level.max_mistakes)
             : null;
 
         resetGame();
@@ -153,6 +163,11 @@ export function useTypingGame() {
 
         const cleanedValue = String(value).replace(/\r?\n/g, ' ');
         typedText.value = cleanedValue.slice(0, targetText.value.length);
+
+        if (maxMistakes.value !== null && mistakes.value > maxMistakes.value) {
+            finishGame('failed');
+            return;
+        }
 
         if (typedText.value === targetText.value) {
             finishGame('finished');
@@ -212,7 +227,9 @@ export function useTypingGame() {
         remainingSeconds,
         correctChars,
         wrongChars,
+        missingChars,
         mistakes,
+        officialMistakeEstimate,
         accuracy,
         wpm,
         score,
@@ -221,6 +238,8 @@ export function useTypingGame() {
         inputDisabled,
         setupGame,
         resetGame,
+        startGame,
+        finishGame,
         updateTypedText,
         getCharacterClass,
     };
