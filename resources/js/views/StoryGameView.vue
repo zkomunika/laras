@@ -1,126 +1,196 @@
 <template>
-    <section class="page-section">
-        <div v-if="loading" class="empty-state">
-            Memuat level...
+    <section>
+        <div class="topbar">
+            <RouterLink to="/chapters" class="btn btn-secondary topbar-back">
+                ◀ Kembali
+            </RouterLink>
+
+            <span class="topbar-title">
+                📖 {{ chapter ? `BAB ${chapter.number} · ${chapter.title}` : 'Detail BAB' }}
+            </span>
+
+            <div class="topbar-right">
+                <span class="tag-pill">{{ completedCount }} / 10 selesai</span>
+            </div>
         </div>
 
-        <div v-else-if="error" class="empty-state">
-            {{ error }}
-        </div>
-
-        <template v-else>
-            <div>
-                <p class="eyebrow">
-                    BAB {{ level.chapter?.number }} — Story Game
-                </p>
-
-                <h1>Level {{ level.level_number }}</h1>
-
-                <p class="page-description">
-                    {{ level.story_text }}
-                </p>
+        <div class="pad">
+            <div v-if="loading" class="empty-state">
+                Memuat detail BAB...
             </div>
 
-            <div class="game-panel">
-                <div class="game-stat-row">
-                    <span>Status: {{ statusLabel }}</span>
-                    <span>Target WPM: {{ level.target_wpm }}</span>
-                    <span>Waktu: {{ remainingSeconds }} detik</span>
-                    <span>WPM: {{ wpm }}</span>
-                    <span>Akurasi: {{ accuracy }}%</span>
-                    <span>Kesalahan: {{ mistakes }}</span>
-                    <span>Skor: {{ score }}</span>
-                </div>
+            <div v-else-if="error" class="empty-state">
+                {{ error }}
+            </div>
 
-                <div class="target-text-box">
-                    <span
-                        v-for="(character, index) in targetCharacters"
-                        :key="index"
-                        class="target-char"
-                        :class="getCharacterClass(index)"
-                    >{{ character }}</span>
-                </div>
-
-                <textarea
-                    class="typing-input"
-                    :value="typedText"
-                    :maxlength="targetText.length"
-                    :disabled="inputDisabled || submittingResult"
-                    placeholder="Mulai ketik teks di sini..."
-                    autofocus
-                    @input="handleTypingInput"
-                    @paste.prevent
-                ></textarea>
-
-                <div
-                    v-if="status === 'finished' || status === 'failed'"
-                    class="result-panel"
-                >
-                    <p class="eyebrow">Hasil Permainan</p>
-
-                    <h2 v-if="status === 'finished'">Level selesai!</h2>
-                    <h2 v-else>Waktu habis!</h2>
-
-                    <div class="result-grid">
-                        <div>
-                            <strong>{{ serverResult?.wpm ?? wpm }}</strong>
-                            <span>WPM</span>
+            <div v-else class="chapter-layout">
+                <div>
+                    <div class="chapter-card selected">
+                        <div class="chap-top">
+                            <span class="chap-num">BAB {{ chapter.number }}</span>
+                            <span class="chap-title">{{ chapter.title }}</span>
+                            <span v-if="completedCount === 10" style="color:var(--green);font-size:13px;">
+                                ✓ Selesai
+                            </span>
                         </div>
 
-                        <div>
-                            <strong>{{ serverResult?.accuracy ?? accuracy }}%</strong>
-                            <span>Akurasi</span>
+                        <p class="chap-desc">
+                            {{ chapter.description }}
+                        </p>
+
+                        <div class="chap-checks">
+                            <div
+                                v-for="level in chapter.levels"
+                                :key="level.id"
+                                class="chap-check"
+                                :class="{ done: getProgress(level)?.is_completed }"
+                            >
+                                {{ getProgress(level)?.is_completed ? '✓' : '' }}
+                            </div>
                         </div>
 
-                        <div>
-                            <strong>{{ serverResult?.mistakes ?? mistakes }}</strong>
-                            <span>Kesalahan</span>
+                        <div class="chap-meta">
+                            <span>🎯 {{ completedCount }} level selesai</span>
+                            <span>📊 {{ chapter.levels.length }} level tersedia</span>
                         </div>
 
-                        <div>
-                            <strong>{{ serverResult?.score ?? score }}</strong>
-                            <span>Skor</span>
+                        <div class="chap-progress">
+                            <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">
+                                Progress: {{ completedCount }} / 10 level
+                            </div>
+
+                            <div class="prog-bar">
+                                <div
+                                    class="prog-fill"
+                                    :style="{ width: `${completedPercent}%` }"
+                                ></div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="stars-row">
-                        <span
-                            v-for="star in 3"
-                            :key="star"
-                            :class="{ active: star <= (serverResult?.stars ?? stars) }"
+                    <div class="card">
+                        <div class="sec-head">Pilih Level</div>
+
+                        <div class="level-tile-grid">
+                            <RouterLink
+                                v-for="level in chapter.levels"
+                                :key="level.id"
+                                :to="isLevelUnlocked(level) ? `/story/levels/${level.id}` : '#'"
+                                class="level-tile"
+                                :class="{
+                                    locked: !isLevelUnlocked(level),
+                                    completed: getProgress(level)?.is_completed,
+                                }"
+                                @click.prevent="handleLevelClick(level)"
+                            >
+                                <div class="lv-num">{{ level.level_number }}</div>
+
+                                <div class="lv-stars">
+                                    <span
+                                        v-for="star in 3"
+                                        :key="star"
+                                        :class="{ active: star <= (getProgress(level)?.best_stars || 0) }"
+                                    >
+                                        ★
+                                    </span>
+                                </div>
+
+                                <div class="lv-pts">
+                                    {{ getProgress(level)?.best_score || 0 }} pts
+                                </div>
+                            </RouterLink>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="sec-head">Daftar Level</div>
+
+                        <article
+                            v-for="level in chapter.levels"
+                            :key="level.id"
+                            class="level-row-card"
+                            :class="{
+                                locked: !isLevelUnlocked(level),
+                                completed: getProgress(level)?.is_completed,
+                            }"
                         >
-                            ★
-                        </span>
+                            <div>
+                                <span class="chapter-number">
+                                    Level {{ level.level_number }}
+                                </span>
+
+                                <h2>{{ level.title }}</h2>
+
+                                <p>{{ level.story_text }}</p>
+
+                                <div class="level-meta">
+                                    <span>Target WPM: {{ level.target_wpm }}</span>
+                                    <span>Akurasi: {{ level.min_accuracy }}%</span>
+                                    <span v-if="level.is_boss_level">⚔️ Boss Level</span>
+                                </div>
+                            </div>
+
+                            <div class="level-row-action">
+                                <div v-if="getProgress(level)" class="progress-summary">
+                                    <strong>{{ getProgress(level).best_score }} pts</strong>
+                                    <span>{{ getProgress(level).best_wpm }} WPM</span>
+                                    <span>{{ getProgress(level).best_accuracy }}%</span>
+                                </div>
+
+                                <RouterLink
+                                    v-if="isLevelUnlocked(level)"
+                                    :to="`/story/levels/${level.id}`"
+                                    class="btn btn-primary"
+                                >
+                                    Mainkan
+                                </RouterLink>
+
+                                <span v-else class="btn btn-disabled">
+                                    Terkunci
+                                </span>
+                            </div>
+                        </article>
                     </div>
-
-                    <p v-if="submittingResult" class="save-status">
-                        Menyimpan hasil permainan...
-                    </p>
-
-                    <p v-else-if="submitMessage" class="save-status">
-                        {{ submitMessage }}
-                    </p>
                 </div>
 
-                <div class="game-actions">
-                    <button type="button" class="btn btn-primary" @click="handleResetGame">
-                        Ulangi Level
-                    </button>
+                <aside class="detail-panel">
+                    <h4>BAB {{ chapter.number }} — Detail</h4>
 
-                    <RouterLink :to="`/chapters/${level.chapter_id}`" class="btn btn-secondary">
-                        Kembali ke BAB
-                    </RouterLink>
-                </div>
+                    <p style="font-size:11px;color:var(--muted);margin-bottom:10px;font-family:var(--font-mono);">
+                        LATAR BELAKANG
+                    </p>
+
+                    <p class="detail-narrative">
+                        {{ chapter.description }}
+                    </p>
+
+                    <div class="detail-meta">🎮 <strong>{{ chapter.levels.length }} Level</strong></div>
+                    <div class="detail-meta">⭐ Kesulitan bertahap</div>
+                    <div class="detail-meta">⏱️ Waktu menyesuaikan level</div>
+                    <div class="detail-meta">🏆 Progress tersimpan otomatis</div>
+
+                    <div style="margin-top:16px;">
+                        <div class="sec-head">Rekomendasi</div>
+
+                        <RouterLink
+                            :to="`/story/levels/${firstPlayableLevel.id}`"
+                            class="btn btn-primary"
+                            style="width:100%;"
+                        >
+                            ▶️ Mainkan Level
+                        </RouterLink>
+                    </div>
+                </aside>
             </div>
-        </template>
+        </div>
     </section>
 </template>
 
 <script setup>
-import { onMounted, ref, watch } from 'vue';
-import { levelApi } from '@/services/levelApi';
-import { gameApi } from '@/services/gameApi';
-import { useTypingGame } from '@/composables/useTypingGame';
+import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { chapterApi } from '@/services/chapterApi';
+import { progressApi } from '@/services/progressApi';
 
 const props = defineProps({
     id: {
@@ -129,113 +199,74 @@ const props = defineProps({
     },
 });
 
-const level = ref(null);
+const router = useRouter();
+
+const chapter = ref(null);
+const progressMap = ref({});
 const loading = ref(true);
 const error = ref('');
 
-const attemptId = ref(null);
-const serverResult = ref(null);
-const submittingResult = ref(false);
-const submitMessage = ref('');
-const resultSubmitted = ref(false);
+const completedCount = computed(() => {
+    if (!chapter.value) {
+        return 0;
+    }
 
-let startPromise = null;
+    return chapter.value.levels.filter((level) => {
+        return getProgress(level)?.is_completed;
+    }).length;
+});
 
-const {
-    targetText,
-    targetCharacters,
-    typedText,
-    status,
-    statusLabel,
-    remainingSeconds,
-    mistakes,
-    accuracy,
-    wpm,
-    score,
-    stars,
-    inputDisabled,
-    setupGame,
-    resetGame,
-    updateTypedText,
-    getCharacterClass,
-} = useTypingGame();
+const completedPercent = computed(() => {
+    return Math.round((completedCount.value / 10) * 100);
+});
+
+const firstPlayableLevel = computed(() => {
+    if (!chapter.value) {
+        return { id: 1 };
+    }
+
+    return chapter.value.levels.find((level) => isLevelUnlocked(level)) || chapter.value.levels[0];
+});
 
 onMounted(async () => {
     try {
-        level.value = await levelApi.detail(props.id);
-        setupGame(level.value);
+        const [chapterData, progressData] = await Promise.all([
+            chapterApi.detail(props.id),
+            progressApi.list().catch(() => []),
+        ]);
+
+        chapter.value = chapterData;
+
+        progressMap.value = progressData.reduce((map, item) => {
+            map[item.level_id] = item;
+            return map;
+        }, {});
     } catch (err) {
-        error.value = 'Gagal memuat level.';
+        error.value = 'Gagal memuat detail BAB.';
     } finally {
         loading.value = false;
     }
 });
 
-function ensureServerAttemptStarted() {
-    if (attemptId.value) {
-        return Promise.resolve(attemptId.value);
-    }
-
-    if (!startPromise) {
-        startPromise = gameApi.start(level.value.id)
-            .then((attempt) => {
-                attemptId.value = attempt.id;
-                return attempt.id;
-            })
-            .finally(() => {
-                startPromise = null;
-            });
-    }
-
-    return startPromise;
+function getProgress(level) {
+    return progressMap.value[level.id] ?? null;
 }
 
-function handleTypingInput(event) {
-    ensureServerAttemptStarted();
+function isLevelUnlocked(level) {
+    if (level.level_number === 1) {
+        return true;
+    }
 
-    updateTypedText(event.target.value);
-    event.target.value = typedText.value;
+    const progress = getProgress(level);
+
+    return Boolean(progress?.unlocked_at || progress?.is_completed);
 }
 
-watch(status, async (newStatus) => {
-    if (!['finished', 'failed'].includes(newStatus)) {
+function handleLevelClick(level) {
+    if (!isLevelUnlocked(level)) {
         return;
     }
 
-    if (resultSubmitted.value) {
-        return;
-    }
-
-    resultSubmitted.value = true;
-    submittingResult.value = true;
-    submitMessage.value = '';
-
-    try {
-        if (!attemptId.value && startPromise) {
-            await startPromise;
-        }
-
-        if (!attemptId.value) {
-            throw new Error('Attempt belum dibuat.');
-        }
-
-        serverResult.value = await gameApi.submit(attemptId.value, typedText.value);
-        submitMessage.value = 'Hasil berhasil disimpan ke database.';
-    } catch (err) {
-        submitMessage.value = 'Hasil belum berhasil disimpan. Cek server atau API.';
-    } finally {
-        submittingResult.value = false;
-    }
-});
-
-function handleResetGame() {
-    attemptId.value = null;
-    serverResult.value = null;
-    submitMessage.value = '';
-    submittingResult.value = false;
-    resultSubmitted.value = false;
-    startPromise = null;
-
-    resetGame();
+    router.push(`/story/levels/${level.id}`);
 }
 </script>
