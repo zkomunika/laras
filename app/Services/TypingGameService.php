@@ -46,9 +46,12 @@ class TypingGameService
         $mistakes = $wrongChars;
         $completed = $typedText === $targetText;
 
+        $wpmScore = ($wpm / max(1, $level->target_wpm)) * 50;
+        $accScore = ($accuracy / 100) * 50;
+        
         $score = max(
             0,
-            (int) round(($wpm * 10) + ($accuracy * 5) - ($mistakes * 2))
+            (int) round($wpmScore + $accScore - ($mistakes * 2))
         );
 
         $stars = $this->calculateStars($completed, $wpm, $accuracy, $level);
