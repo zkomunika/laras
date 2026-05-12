@@ -182,7 +182,13 @@
                 </aside>
 
                 <!-- CHAT PANEL -->
-                <div class="chat-panel">
+                <div class="chat-panel" style="display: flex; flex-direction: column;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.2);">
+                        <span style="font-family: var(--font-head); color: var(--gold2); font-size: 14px;">Ruang Obrolan</span>
+                        <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 10px;" @click="clearLocalChat">
+                            <Trash2 :size="14" style="margin-right: 6px;" /> Bersihkan
+                        </button>
+                    </div>
                     <div ref="chatBox" class="chat-box-area">
                         <div v-if="messages.length === 0" class="mini-empty">
                             Belum ada pesan. Kirim pesan pertama untuk memulai percakapan.
@@ -233,7 +239,7 @@ import { realtimeApi } from '@/services/realtimeApi';
 import { soundService } from '@/services/soundService';
 import { 
     MessageCircle, Sword, Activity, Target, Timer, 
-    Zap, BarChart2, AlertCircle, Trophy, Star 
+    Zap, BarChart2, AlertCircle, Trophy, Star, Trash2 
 } from 'lucide-vue-next';
 import UserAvatar from '@/components/UserAvatar.vue';
 
@@ -332,7 +338,12 @@ onMounted(async () => {
         })
         .listen('MessageSent', (e) => {
             messages.value.push(e.message);
+            // Automatic limit to 50 messages to avoid lag
+            if (messages.value.length > 50) {
+                messages.value.shift();
+            }
             scrollToBottom();
+            soundService.play('click');
         })
         .listen('PlayerProgress', (e) => {
             const u = onlineUsers.value.find(user => user.id === e.userId);
@@ -386,6 +397,11 @@ async function scrollToBottom() {
     if (chatBox.value) {
         chatBox.value.scrollTop = chatBox.value.scrollHeight;
     }
+}
+
+function clearLocalChat() {
+    messages.value = [];
+    soundService.play('click');
 }
 </script>
 

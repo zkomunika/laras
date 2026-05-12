@@ -85,6 +85,17 @@
 
         <main class="main">
             <RouterView :key="route.fullPath" />
+            
+            <footer class="app-footer">
+                <div class="footer-content">
+                    <div class="footer-logo">
+                        <Sword :size="20" />
+                        <span>LARAS</span>
+                    </div>
+                    <p class="footer-text">Ladang Aksara Siliwangi &copy; 2026</p>
+                    <p class="footer-sub">Diciptakan untuk melestarikan dan meningkatkan kecepatan mengetik</p>
+                </div>
+            </footer>
         </main>
     </div>
 </template>
@@ -134,3 +145,42 @@ async function handleLogout() {
     router.push('/login');
 }
 </script>
+
+<style scoped>
+.app-footer {
+    margin-top: auto;
+    padding: 40px 20px;
+    text-align: center;
+    border-top: 1px solid var(--border);
+    background: linear-gradient(to top, rgba(0,0,0,0.5), transparent);
+}
+
+.footer-content {
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.footer-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-head);
+    color: var(--gold);
+    font-size: 18px;
+    margin-bottom: 8px;
+}
+
+.footer-text {
+    font-size: 14px;
+    color: var(--text);
+}
+
+.footer-sub {
+    font-size: 12px;
+    color: var(--muted);
+}
+</style>
