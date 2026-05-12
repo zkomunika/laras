@@ -1,38 +1,65 @@
 <template>
-    <section class="auth-page">
+    <div class="auth-wrap">
         <div class="auth-card">
-            <p class="eyebrow">Buat Akun</p>
-            <h1>Register</h1>
+            <div class="auth-logo">
+                <div style="font-size:36px;margin-bottom:8px;">⚔️</div>
+                <h1>LARAS</h1>
+                <p>Ladang Aksara Siliwangi</p>
+                <p style="margin-top:4px;font-size:12px;">
+                    Buat akun untuk memulai perjalanan aksara.
+                </p>
+            </div>
 
-            <form class="auth-form" @submit.prevent="submitRegister">
-                <label>
-                    Nama
-                    <input v-model="form.name" type="text" required>
-                </label>
+            <form @submit.prevent="submitRegister">
+                <div class="form-group">
+                    <label class="form-label">Nama Lengkap</label>
+                    <input
+                        v-model="form.name"
+                        type="text"
+                        class="form-input"
+                        placeholder="Nama kamu"
+                        required
+                    >
+                </div>
 
-                <label>
-                    Email
-                    <input v-model="form.email" type="email" required>
-                </label>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input
+                        v-model="form.email"
+                        type="email"
+                        class="form-input"
+                        placeholder="nama@example.com"
+                        required
+                    >
+                </div>
 
-                <label>
-                    Password
-                    <input v-model="form.password" type="password" minlength="6" required>
-                </label>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input
+                        v-model="form.password"
+                        type="password"
+                        class="form-input"
+                        placeholder="Minimal 6 karakter"
+                        minlength="6"
+                        required
+                    >
+                </div>
 
-                <p v-if="error" class="form-error">{{ error }}</p>
+                <p v-if="error" class="form-error">
+                    {{ error }}
+                </p>
 
-                <button class="btn btn-primary" type="submit" :disabled="loading">
-                    {{ loading ? 'Memproses...' : 'Register' }}
+                <button class="btn btn-primary btn-full" type="submit" :disabled="loading">
+                    {{ loading ? 'Memproses...' : '✨ Daftar' }}
                 </button>
             </form>
 
-            <p class="auth-switch">
+            <div class="auth-switch">
                 Sudah punya akun?
-                <RouterLink to="/login">Login</RouterLink>
-            </p>
+                <RouterLink to="/login">Masuk di sini</RouterLink>
+            </div>
         </div>
-    </section>
+    </div>
 </template>
 
 <script setup>
@@ -58,7 +85,7 @@ async function submitRegister() {
 
     try {
         await auth.register(form);
-        router.push('/chapters');
+        router.push('/');
     } catch (err) {
         error.value = err.response?.data?.message || 'Register gagal.';
     } finally {

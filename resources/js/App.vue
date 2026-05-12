@@ -1,47 +1,95 @@
 <template>
-    <div class="app-shell">
-        <header class="topbar">
-            <RouterLink to="/" class="brand">
-                <span class="brand-mark">ᮜ</span>
+    <RouterView v-if="isAuthPage" />
 
-                <span class="brand-text">
-                    <strong>LARAS</strong>
-                    <small>Ladang Aksara Siliwangi</small>
-                </span>
+    <div v-else class="shell">
+        <nav class="sidebar">
+            <RouterLink to="/" class="sidebar-logo">
+                ⚔️<br>
+                LARAS
             </RouterLink>
 
-            <nav class="nav-menu">
-                <RouterLink to="/">Home</RouterLink>
-                <RouterLink to="/chapters">Chapter</RouterLink>
-                <RouterLink to="/leaderboard">Leaderboard</RouterLink>
-                <RouterLink v-if="auth.isAuthenticated" to="/profile">Profile</RouterLink>
-                <RouterLink v-if="!auth.isAuthenticated" to="/login">Login</RouterLink>
-                <RouterLink v-if="!auth.isAuthenticated" to="/register">Register</RouterLink>
-                <RouterLink v-if="auth.isAuthenticated" to="/realtime">Realtime</RouterLink>
+            <RouterLink to="/" class="nav-btn" title="Home">
+                🏠
+                <span class="tooltip">Home</span>
+            </RouterLink>
+
+            <RouterLink to="/chapters" class="nav-btn" title="Pilih Bab">
+                📖
+                <span class="tooltip">Pilih Bab</span>
+            </RouterLink>
+
+            <RouterLink to="/story/levels/1" class="nav-btn" title="Bermain">
+                🎮
+                <span class="tooltip">Bermain</span>
+            </RouterLink>
+
+            <RouterLink to="/leaderboard" class="nav-btn" title="Leaderboard">
+                🏆
+                <span class="tooltip">Papan Peringkat</span>
+            </RouterLink>
+
+            <RouterLink
+                v-if="auth.isAuthenticated"
+                to="/realtime"
+                class="nav-btn"
+                title="Realtime"
+            >
+                💬
+                <span class="tooltip">Realtime</span>
+            </RouterLink>
+
+            <div class="sidebar-bottom">
+                <RouterLink
+                    v-if="auth.isAuthenticated"
+                    to="/profile"
+                    class="nav-btn"
+                    title="Profil"
+                >
+                    👤
+                    <span class="tooltip">Profil</span>
+                </RouterLink>
+
+                <RouterLink
+                    v-if="!auth.isAuthenticated"
+                    to="/login"
+                    class="nav-btn"
+                    title="Login"
+                >
+                    🔓
+                    <span class="tooltip">Login</span>
+                </RouterLink>
 
                 <button
                     v-if="auth.isAuthenticated"
-                    class="nav-button"
+                    class="nav-btn"
                     type="button"
+                    title="Logout"
                     @click="handleLogout"
                 >
-                    Logout
+                    🚪
+                    <span class="tooltip">Keluar</span>
                 </button>
-            </nav>
-        </header>
+            </div>
+        </nav>
 
-        <main class="main-content">
+        <main class="main">
             <RouterView />
         </main>
     </div>
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router';
+import { computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 
+const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
+
+const isAuthPage = computed(() => {
+    return ['login', 'register'].includes(route.name);
+});
 
 async function handleLogout() {
     await auth.logout();

@@ -1,33 +1,53 @@
 <template>
-    <section class="auth-page">
+    <div class="auth-wrap">
         <div class="auth-card">
-            <p class="eyebrow">Masuk Akun</p>
-            <h1>Login LARAS</h1>
+            <div class="auth-logo">
+                <div style="font-size:36px;margin-bottom:8px;">⚔️</div>
+                <h1>LARAS</h1>
+                <p>Ladang Aksara Siliwangi</p>
+                <p style="margin-top:4px;font-size:12px;">
+                    Game Typing Interaktif · Universitas Siliwangi
+                </p>
+            </div>
 
-            <form class="auth-form" @submit.prevent="submitLogin">
-                <label>
-                    Email
-                    <input v-model="form.email" type="email" required>
-                </label>
+            <form @submit.prevent="submitLogin">
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input
+                        v-model="form.email"
+                        type="email"
+                        class="form-input"
+                        placeholder="user@example.com"
+                        required
+                    >
+                </div>
 
-                <label>
-                    Password
-                    <input v-model="form.password" type="password" required>
-                </label>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input
+                        v-model="form.password"
+                        type="password"
+                        class="form-input"
+                        placeholder="••••••••"
+                        required
+                    >
+                </div>
 
-                <p v-if="error" class="form-error">{{ error }}</p>
+                <p v-if="error" class="form-error">
+                    {{ error }}
+                </p>
 
-                <button class="btn btn-primary" type="submit" :disabled="loading">
-                    {{ loading ? 'Memproses...' : 'Login' }}
+                <button class="btn btn-primary btn-full" type="submit" :disabled="loading">
+                    {{ loading ? 'Memproses...' : '🔓 Login' }}
                 </button>
             </form>
 
-            <p class="auth-switch">
+            <div class="auth-switch">
                 Belum punya akun?
-                <RouterLink to="/register">Register</RouterLink>
-            </p>
+                <RouterLink to="/register">Daftar di sini</RouterLink>
+            </div>
         </div>
-    </section>
+    </div>
 </template>
 
 <script setup>
@@ -52,7 +72,7 @@ async function submitLogin() {
 
     try {
         await auth.login(form);
-        router.push('/chapters');
+        router.push('/');
     } catch (err) {
         error.value = err.response?.data?.message || 'Login gagal.';
     } finally {
