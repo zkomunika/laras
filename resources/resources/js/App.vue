@@ -18,10 +18,15 @@
                 <span class="tooltip">Pilih Bab</span>
             </RouterLink>
 
-            <RouterLink to="/story/levels/1" class="nav-btn" title="Bermain">
+            <button
+                class="nav-btn"
+                type="button"
+                title="Bermain"
+                @click="goToLastUnlockedLevel"
+            >
                 🎮
                 <span class="tooltip">Bermain</span>
-            </RouterLink>
+            </button>
 
             <RouterLink
                 v-if="auth.isAuthenticated"
@@ -99,11 +104,12 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { useThemeStore } from '@/stores/themeStore';
 import { useAudioStore } from '@/stores/audioStore';
+import { storyResumeService } from '@/services/storyResumeService';
 
 const route = useRoute();
 const router = useRouter();
@@ -116,7 +122,6 @@ const isAuthPage = computed(() => {
 });
 
 function handleSessionExpired() {
-    audio.stopMusic({ reset: true });
     auth.clearSession();
     if (!['login', 'register'].includes(route.name)) {
         router.push('/login');
@@ -131,33 +136,28 @@ onMounted(async () => {
     if (auth.token) {
         await auth.checkSession();
     }
-
-    if (auth.isAuthenticated) {
-        audio.startMusic();
-    } else {
-        audio.stopMusic({ reset: true });
-    }
 });
 
 onBeforeUnmount(() => {
     window.removeEventListener('laras:session-expired', handleSessionExpired);
 });
 
+async function goToLastUnlockedLevel() {
+    if (!auth.isAuthenticated) {
+        router.push('/login');
+        return;
+    }
+
+    try {
+        const path = await storyResumeService.getLastUnlockedLevelPath();
+        router.push(path);
+    } catch (error) {
+        router.push('/story/levels/1');
+    }
+}
+
 async function handleLogout() {
-    audio.stopMusic({ reset: true });
     await auth.logout();
     router.push('/login');
 }
-
-watch(
-    () => auth.isAuthenticated,
-    (isAuthenticated) => {
-        if (isAuthenticated) {
-            audio.startMusic();
-            return;
-        }
-
-        audio.stopMusic({ reset: true });
-    }
-);
 </script>

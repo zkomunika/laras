@@ -42,14 +42,14 @@
                     <div class="game-progress-wrap">
                         <div class="game-progress-label">
                             <span>Progress mengetik</span>
-                            <span>{{ typedText.length }} / {{ targetText.length }} karakter · {{ targetWordCount }} kata</span>
+                            <span>{{ typedText.length }} / {{ targetText.length }} karakter</span>
                         </div>
                         <div class="prog-bar">
                             <div class="prog-fill" :style="{ width: `${progressPercent}%` }"></div>
                         </div>
                     </div>
 
-                    <div class="narrative-box challenge-random-text-box">
+                    <div class="narrative-box">
                         <span
                             v-for="(character, index) in targetCharacters"
                             :key="`${character}-${index}`"
@@ -68,11 +68,11 @@
                             autocorrect="off"
                             autocapitalize="off"
                             :disabled="submitting || submitted"
-                            placeholder="Ketik kata challenge di sini..."
+                            placeholder="Ketik teks challenge di sini..."
                             @input="handleInput"
                         ></textarea>
                         <div class="typing-hint">
-                            Challenge dinilai berdasarkan kecocokan teks target, durasi room, akurasi, WPM, dan jumlah salah. Teks target berasal dari kata acak story mode.
+                            Backend tetap menghitung hasil resmi berdasarkan teks target, waktu mulai room, akurasi, WPM, dan jumlah salah.
                         </div>
                     </div>
 
@@ -105,12 +105,12 @@
                         </div>
                     </div>
 
-                    <h4 style="margin-top:18px;">Info Challenge</h4>
-                    <p class="detail-narrative">Ketik seluruh kata random yang diambil dari materi story mode sebelum waktu habis.</p>
-                    <div class="detail-meta">🧩 Jumlah Kata: <strong>{{ targetWordCount }}</strong></div>
-                    <div class="detail-meta">⏱️ Batas Waktu: <strong>{{ limitSeconds }} detik</strong></div>
-                    <div class="detail-meta">📚 Sumber Kata: <strong>Story mode</strong></div>
-                    <div class="detail-meta">🏁 Syarat Valid: <strong>Teks sama persis</strong></div>
+                    <h4 style="margin-top:18px;">Info Level</h4>
+                    <p class="detail-narrative">{{ room.level?.story_text }}</p>
+                    <div class="detail-meta">🎯 Target WPM: <strong>{{ room.level?.target_wpm }}</strong></div>
+                    <div class="detail-meta">✅ Minimum Akurasi: <strong>{{ room.level?.min_accuracy }}%</strong></div>
+                    <div class="detail-meta">⏱️ Batas Waktu: <strong>{{ room.level?.time_limit_seconds }} detik</strong></div>
+                    <div class="detail-meta">❌ Maksimal Salah: <strong>{{ room.level?.max_mistakes }}</strong></div>
 
                     <div v-if="lastResult" class="result-panel compact-result">
                         <div class="sec-head">Hasilmu</div>
@@ -136,9 +136,11 @@ import { useRoute, useRouter } from 'vue-router';
 import ThemeToggle from '@/components/ThemeToggle.vue';
 import CharacterAvatar from '@/components/CharacterAvatar.vue';
 import { challengeApi } from '@/services/challengeApi';
+import { useAudioStore } from '@/stores/audioStore';
 
 const route = useRoute();
 const router = useRouter();
+const audio = useAudioStore();
 const roomId = computed(() => route.params.id);
 const room = ref(null);
 const loading = ref(false);
@@ -153,14 +155,36 @@ const typingInput = ref(null);
 let timer = null;
 let poller = null;
 let progressTimer = null;
+let lastTypedLength = 0;
+let timeWarningPlayed = false;
 
-const targetText = computed(() => room.value?.challenge?.target_text || room.value?.level?.target_text || '');
+function stopGameplayMusic() {
+    audio.stopMusic({ reset: true });
+}
+
+function clearGameplayIntervals() {
+    if (timer) {
+        clearInterval(timer);
+        timer = null;
+    }
+
+    if (poller) {
+        clearInterval(poller);
+        poller = null;
+    }
+
+    if (progressTimer) {
+        clearInterval(progressTimer);
+        progressTimer = null;
+    }
+}
+
+const targetText = computed(() => room.value?.level?.target_text || '');
 const targetCharacters = computed(() => Array.from(targetText.value));
 const targetLength = computed(() => targetText.value.length || 1);
 const progressPercent = computed(() => Math.min(100, Math.round((typedText.value.length / targetLength.value) * 100)));
-const limitSeconds = computed(() => Number(room.value?.challenge?.time_limit_seconds || room.value?.time_limit_seconds || room.value?.level?.time_limit_seconds || 0));
+const limitSeconds = computed(() => Number(room.value?.level?.time_limit_seconds || 0));
 const remainingSeconds = computed(() => Math.max(0, limitSeconds.value - elapsedSeconds.value));
-const targetWordCount = computed(() => Number(room.value?.challenge?.word_count || room.value?.word_count || targetText.value.trim().split(/\s+/).filter(Boolean).length || 0));
 
 const mistakes = computed(() => {
     const max = Math.max(typedText.value.length, targetText.value.length);
@@ -215,16 +239,33 @@ function refreshElapsed() {
 async function loadRoom() {
     const data = await challengeApi.room(roomId.value);
     room.value = data;
+    lastTypedLength = typedText.value.length;
+    timeWarningPlayed = false;
 
     if (data.status === 'waiting') {
+        stopGameplayMusic();
         router.push(`/challenge/rooms/${data.id}`);
+        return false;
     }
+
+    if (data.status === 'finished') {
+        stopGameplayMusic();
+        router.push(`/challenge/rooms/${data.id}/results`);
+        return false;
+    }
+
+    return data.status === 'playing';
 }
 
 async function pollRoom() {
     try {
         const data = await challengeApi.room(roomId.value);
         room.value = data;
+
+        if (data.status !== 'playing') {
+            stopGameplayMusic();
+            clearGameplayIntervals();
+        }
     } catch (_) {
         // polling failure is non-blocking
     }
@@ -243,11 +284,29 @@ async function sendProgress() {
         });
         await pollRoom();
     } catch (_) {
-        // progress update is best effort in tahap challenge basic
+        // progress update is best effort in tahap 6 basic
     }
 }
 
 function handleInput() {
+    const currentLength = typedText.value.length;
+
+    if (currentLength > lastTypedLength) {
+        const latestIndex = currentLength - 1;
+        const isCorrect = typedText.value[latestIndex] === targetText.value[latestIndex];
+
+        if (!isCorrect) {
+            audio.playSfx('wrong');
+        } else {
+            const cleanCombo = currentLength >= 12 && mistakes.value === 0 && currentLength % 12 === 0;
+            audio.playSfx(cleanCombo ? 'levelUp' : 'correct', {
+                volumeMultiplier: cleanCombo ? 0.9 : 0.55,
+            });
+        }
+    }
+
+    lastTypedLength = currentLength;
+
     if (typedText.value === targetText.value && !submitted.value) {
         submitResult();
     }
@@ -266,6 +325,9 @@ async function submitResult() {
         lastResult.value = data.result;
         room.value = data.room;
         submitted.value = true;
+        stopGameplayMusic();
+        clearGameplayIntervals();
+        audio.playSfx(lastResult.value?.completed ? 'finish' : 'wrong');
     } catch (err) {
         submitError.value = err.response?.data?.message || Object.values(err.response?.data?.errors || {})?.[0]?.[0] || 'Gagal mengirim hasil challenge.';
     } finally {
@@ -274,15 +336,40 @@ async function submitResult() {
 }
 
 watch(remainingSeconds, (value) => {
+    if (value <= 10 && value > 0 && !timeWarningPlayed && !submitted.value && room.value?.status === 'playing') {
+        timeWarningPlayed = true;
+        audio.playSfx('click');
+    }
+
     if (value === 0 && !submitted.value && room.value?.status === 'playing') {
+        stopGameplayMusic();
+        audio.playSfx('wrong');
         submitResult();
     }
 });
 
+watch(
+    () => room.value?.status,
+    (newStatus) => {
+        if (newStatus && newStatus !== 'playing') {
+            stopGameplayMusic();
+            clearGameplayIntervals();
+        }
+    }
+);
+
 onMounted(async () => {
     loading.value = true;
     try {
-        await loadRoom();
+        const canPlay = await loadRoom();
+
+        if (!canPlay) {
+            return;
+        }
+
+        stopGameplayMusic();
+        audio.startMusic('challenge');
+        audio.playSfx('start');
         timer = setInterval(refreshElapsed, 1000);
         poller = setInterval(pollRoom, 4000);
         progressTimer = setInterval(sendProgress, 2000);
@@ -297,8 +384,7 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
-    if (timer) clearInterval(timer);
-    if (poller) clearInterval(poller);
-    if (progressTimer) clearInterval(progressTimer);
+    clearGameplayIntervals();
+    stopGameplayMusic();
 });
 </script>

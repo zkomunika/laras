@@ -11,65 +11,65 @@ class LevelSeeder extends Seeder
     public function run(): void
     {
         $levels = [
-            // BAB 1 — huruf kecil, kata pendek, tanpa simbol berat
-            [1, 1, 'jejak huruf kecil', 'aksara pagi mulai hidup di ladang siliwangi', 16, 80, 120, 20],
-            [1, 2, 'napas pertama', 'juru aksara belajar menata kata dengan tenang', 17, 80, 120, 20],
-            [1, 3, 'ladang sunyi', 'daun muda bergerak pelan saat pena mulai menulis', 18, 81, 115, 19],
-            [1, 4, 'ritme jemari', 'setiap huruf membawa langkah kecil menuju cerita', 19, 82, 115, 19],
-            [1, 5, 'kata sederhana', 'sang murid menjaga fokus agar tulisan tetap rapi', 20, 82, 110, 18],
-            [1, 6, 'baris pertama', 'latihan yang sabar membuat jemari semakin percaya', 21, 83, 110, 18],
-            [1, 7, 'kalimat terang', 'Aksara pertama mulai hidup di bawah cahaya pagi.', 22, 84, 105, 17],
-            [1, 8, 'huruf kapital awal', 'Sang Juru Aksara menulis pesan untuk penjaga ladang.', 23, 84, 105, 17],
-            [1, 9, 'tanda baca ringan', 'Di ladang pagi, pena tua bergerak dengan hati-hati.', 24, 85, 100, 16],
-            [1, 10, 'boss awal aksara', 'Prasasti tua berkata: jagalah aksara, jagalah cerita.', 26, 86, 95, 15],
+            // BAB 1 — pengenalan tokoh, kalimat pendek, ritme mengetik ringan
+            [1, 1, 'sri baduga', 'sri baduga dikenal sebagai raja sunda di pakuan', 16, 80, 120, 20],
+            [1, 2, 'nama siliwangi', 'prabu siliwangi adalah nama populer dalam tradisi sunda', 17, 80, 120, 20],
+            [1, 3, 'pakuan', 'pakuan menjadi pusat penting dalam sejarah kerajaan sunda', 18, 81, 115, 19],
+            [1, 4, 'pajajaran', 'pajajaran sering merujuk pada pusat kerajaan di pakuan', 19, 82, 115, 19],
+            [1, 5, 'jayadewata', 'sri baduga juga dikenal dengan nama jayadewata', 20, 82, 110, 18],
+            [1, 6, 'tradisi sunda', 'cerita siliwangi hidup kuat dalam ingatan masyarakat sunda', 21, 83, 110, 18],
+            [1, 7, 'fakta awal', 'Sri Baduga dikenal sebagai raja Sunda di Pakuan.', 22, 84, 105, 17],
+            [1, 8, 'tokoh sejarah', 'Prabu Siliwangi sering dikaitkan dengan Sri Baduga.', 23, 84, 105, 17],
+            [1, 9, 'sejarah lisan', 'Dalam tradisi Sunda, nama Siliwangi menjadi simbol raja ideal.', 24, 85, 100, 16],
+            [1, 10, 'boss fakta awal', 'Boss Awal: bedakan fakta sejarah dari legenda Sunda.', 26, 86, 95, 15],
 
-            // BAB 2 — kalimat lebih panjang, kapital, koma, titik, tanda tanya
-            [2, 11, 'jalan ladang', 'Jejak Ladang Aksara membawa murid menuju hutan pengetahuan.', 28, 86, 95, 15],
-            [2, 12, 'daun lontar', 'Angin pagi menyapu daun lontar, lalu membuka pesan rahasia.', 29, 86, 92, 15],
-            [2, 13, 'tempo naik', 'Setiap kalimat menuntut fokus, tempo, dan ketelitian jemari.', 30, 87, 92, 14],
-            [2, 14, 'persimpangan', 'Di persimpangan jalan, sang penulis bertanya: lanjut atau menyerah?', 31, 87, 90, 14],
-            [2, 15, 'cerita terbuka', 'Naskah kerajaan mulai terbuka, tetapi maknanya belum lengkap.', 32, 88, 90, 14],
-            [2, 16, 'akurasi dijaga', 'Kecepatan boleh meningkat, namun akurasi tetap harus dijaga.', 33, 88, 88, 13],
-            [2, 17, 'kalimat majemuk', 'Sang juru aksara membaca cepat, menulis cermat, dan tetap tenang.', 34, 89, 88, 13],
-            [2, 18, 'tanya penjaga', 'Penjaga bertanya, "Siapkah kamu menjaga aksara kerajaan?"', 35, 89, 85, 12],
-            [2, 19, 'ritme cerita', 'Di ujung ladang, cahaya emas muncul; babak baru segera dimulai.', 36, 90, 85, 12],
-            [2, 20, 'boss ladang', 'Boss Ladang menguji fokus: cepat, tepat, dan jangan banyak salah!', 38, 90, 82, 11],
+            // BAB 2 — asal-usul, silsilah, dan keterbatasan data historis
+            [2, 11, 'kelahiran', 'Data kelahiran Prabu Siliwangi tidak disebut jelas dalam prasasti.', 28, 86, 95, 15],
+            [2, 12, 'kawali galuh', 'Tradisi menyebut Kawali dan Galuh sebagai ruang awal kisah Siliwangi.', 29, 86, 92, 15],
+            [2, 13, 'silsilah', 'Silsilah Sri Baduga dikaitkan dengan garis raja Sunda dan Galuh.', 30, 87, 92, 14],
+            [2, 14, 'niskala wastu', 'Niskala Wastu Kancana sering disebut dalam rekonstruksi dinasti Sunda.', 31, 87, 90, 14],
+            [2, 15, 'surawisesa', 'Prasasti Batu Tulis menyebut Surawisesa sebagai penerus Sri Baduga.', 32, 88, 90, 14],
+            [2, 16, 'sumber naskah', 'Carita Parahyangan menjadi salah satu bahan penting sejarah Sunda.', 33, 88, 88, 13],
+            [2, 17, 'batas data', 'Tahun lahir Sri Baduga belum dapat dipastikan secara prasastis.', 34, 89, 88, 13],
+            [2, 18, 'kritik sumber', 'Sejarawan bertanya, "mana yang fakta dan mana yang tradisi?"', 35, 89, 85, 12],
+            [2, 19, 'warisan galuh', 'Hubungan Sunda dan Galuh membantu menjelaskan posisi Sri Baduga.', 36, 90, 85, 12],
+            [2, 20, 'boss silsilah', 'Boss Silsilah: pahami asal-usul, sumber, dan batas pembuktiannya!', 38, 90, 82, 11],
 
-            // BAB 3 — struktur lebih kompleks, kutip, titik dua, tanda hubung
-            [3, 21, 'ruang naskah', 'Pujangga kerajaan menulis kisah panjang tentang keberanian dan kebijaksanaan.', 40, 90, 82, 11],
-            [3, 22, 'tanda bermakna', 'Di ruang naskah istana, setiap tanda baca memiliki makna penting.', 41, 90, 80, 11],
-            [3, 23, 'pesan istana', 'Pesan itu berbunyi: "Tulislah dengan jujur, cepat, dan teliti."', 42, 91, 80, 10],
-            [3, 24, 'kalimat panjang', 'Kalimat yang lebih panjang menuntut konsentrasi penuh dari sang juru aksara muda.', 43, 91, 78, 10],
-            [3, 25, 'gamelan malam', 'Suara gamelan terdengar pelan saat naskah kerajaan dibuka kembali.', 44, 92, 78, 10],
-            [3, 26, 'kesalahan fatal', 'Akurasi adalah kehormatan; satu kesalahan dapat mengubah pesan.', 45, 92, 76, 9],
-            [3, 27, 'kata terikat', 'Pena bergerak cepat, tetapi pikiran harus tetap tertata dan waspada.', 46, 92, 76, 9],
-            [3, 28, 'naskah berlapis', 'Setiap paragraf menyimpan petunjuk tentang warisan ilmu masa lalu.', 47, 93, 74, 9],
-            [3, 29, 'ujian pujangga', 'Istana menunggu tulisan yang bersih, cepat, rapi, dan penuh ketelitian.', 48, 93, 74, 8],
-            [3, 30, 'boss pujangga', 'Boss Pujangga berkata: "Jaga tempo-mu, baca tanda-baca, lalu selesaikan!"', 50, 94, 72, 8],
+            // BAB 3 — naik takhta, pemerintahan, dan masa kejayaan
+            [3, 21, 'naik takhta', 'Sri Baduga diperkirakan naik takhta sekitar tahun 1482.', 40, 90, 82, 11],
+            [3, 22, 'masa kuasa', 'Masa pemerintahannya sering dihitung hingga tahun 1521.', 41, 90, 80, 11],
+            [3, 23, 'batu tulis', 'Prasasti Batu Tulis menyebut Sri Baduga sebagai raja besar Sunda.', 42, 91, 80, 10],
+            [3, 24, 'pakuan kuat', 'Pakuan Pajajaran dipahami sebagai pusat politik Kerajaan Sunda.', 43, 91, 78, 10],
+            [3, 25, 'masa jaya', 'Masa Sri Baduga kerap dipahami sebagai puncak konsolidasi Sunda.', 44, 92, 78, 10],
+            [3, 26, 'politik sunda', 'Kekuatan Sunda bertumpu pada pusat pedalaman dan jaringan pesisir.', 45, 92, 76, 9],
+            [3, 27, 'ekonomi lada', 'Perdagangan lada dan hasil bumi memperkuat posisi ekonomi Sunda.', 46, 92, 76, 9],
+            [3, 28, 'ibu kota', 'Pakuan bukan sekadar tempat tinggal raja, tetapi pusat pemerintahan.', 47, 93, 74, 9],
+            [3, 29, 'raja ideal', 'Citra Siliwangi sebagai raja adil dibentuk oleh sejarah dan legenda.', 48, 93, 74, 8],
+            [3, 30, 'boss pakuan', 'Boss Pakuan berkata: "kuasai tahun, tokoh, dan bukti sejarah!"', 50, 94, 72, 8],
 
-            // BAB 4 — angka, tahun, persen, waktu, tanda kurung, slash
-            [4, 31, 'lonceng malam', 'Ujian Pajajaran dimulai pada pukul 21:30, saat lonceng kerajaan berbunyi.', 52, 94, 72, 8],
-            [4, 32, 'batas waktu', 'Sang juru aksara harus menyalin 3 naskah sebelum obor terakhir padam.', 53, 94, 70, 8],
-            [4, 33, 'tekanan meningkat', 'Waktu tersisa 60 detik; kalimat makin panjang, padat, dan rumit.', 54, 94, 70, 7],
-            [4, 34, 'nilai berkurang', 'Kesalahan kecil mengurangi 5% nilai, maka fokus menjadi senjata utama.', 55, 95, 68, 7],
-            [4, 35, 'kode penjaga', 'Kode gerbang adalah PJ-04/15; masukkan dengan tepat tanpa tertukar.', 56, 95, 68, 7],
-            [4, 36, 'data istana', 'Catatan istana mencatat 27 prajurit, 8 penjaga, dan 1 naskah rahasia.', 57, 95, 66, 6],
-            [4, 37, 'format laporan', 'Laporan harian: akurasi 92%, WPM 58, kesalahan 4, status aman.', 58, 95, 66, 6],
-            [4, 38, 'perintah cepat', 'Perintah: buka ruang arsip (A-12), ambil naskah, lalu tutup kembali.', 59, 95, 64, 6],
-            [4, 39, 'gerbang pajajaran', 'Gerbang Pajajaran hanya terbuka bagi pemain dengan skor 1.500+ poin.', 60, 96, 64, 5],
-            [4, 40, 'boss pajajaran', 'Boss Pajajaran menguji: 3 angka, 2 simbol, 1 fokus, dan 0 alasan!', 62, 96, 62, 5],
+            // BAB 4 — pencapaian, sumber tertulis, angka, dan konteks politik
+            [4, 31, 'periode kuasa', 'Periode 1482-1521 sering dipakai untuk membaca masa Sri Baduga.', 52, 94, 72, 8],
+            [4, 32, 'prasasti', 'Prasasti Batu Tulis dibuat oleh Surawisesa sekitar 12 tahun setelah wafatnya Sri Baduga.', 53, 94, 70, 8],
+            [4, 33, 'pemerintahan', 'Sri Baduga memerintah kurang lebih 39 tahun menurut rekonstruksi sejarah.', 54, 94, 70, 7],
+            [4, 34, 'sunda portugis', 'Sesudah Sri Baduga, Sunda berhadapan dengan perubahan politik pesisir.', 55, 95, 68, 7],
+            [4, 35, 'sunda kelapa', 'Sunda Kelapa menjadi simpul dagang penting sebelum dikuasai kekuatan pesisir.', 56, 95, 68, 7],
+            [4, 36, 'pesisir', 'Cirebon, Demak, dan Banten memberi tekanan besar pada wilayah Sunda.', 57, 95, 66, 6],
+            [4, 37, 'keruntuhan', 'Kerajaan Sunda runtuh sekitar 1579, jauh setelah wafatnya Sri Baduga.', 58, 95, 66, 6],
+            [4, 38, 'analisis sebab', 'Keruntuhan Sunda dipengaruhi tekanan eksternal dan pelemahan internal.', 59, 95, 64, 6],
+            [4, 39, 'data dan mitos', 'Analisis sejarah harus memisahkan data, tafsir, dan mitos secara hati-hati.', 60, 96, 64, 5],
+            [4, 40, 'boss konteks', 'Boss Konteks: 1482, 1521, 1579; pahami urutan sejarahnya!', 62, 96, 62, 5],
 
-            // BAB 5 — kapital campuran, simbol, angka, slash, hashtag, versi, tekanan tinggi
-            [5, 41, 'naskah terakhir', 'Pewaris Siliwangi berdiri di depan Naskah Terakhir #01.', 64, 96, 62, 5],
-            [5, 42, 'warisan agung', 'Cerita panjang tentang keberanian, kebijaksanaan, dan kesetiaan harus ditulis tanpa ragu.', 65, 96, 60, 5],
-            [5, 43, 'kode akhir', 'Masukkan kode LARAS-50/FINAL sebelum waktu menunjukkan 00:45.', 66, 97, 60, 4],
-            [5, 44, 'huruf campuran', 'Sang Pewaris membaca: Prabu Siliwangi, Pajajaran, dan Aksara Sunda.', 67, 97, 58, 4],
-            [5, 45, 'simbol kerajaan', 'Tanda kerajaan @Pajajaran menyala bersama simbol #Aksara dan %Kemenangan.', 68, 97, 58, 4],
-            [5, 46, 'versi naskah', 'Naskah v2.0 berisi 5 bab, 50 level, 100% tekad, dan 0 keraguan.', 70, 97, 56, 4],
-            [5, 47, 'perintah final', 'Perintah FINAL: ketik cepat, jaga akurasi, hindari typo, lalu tekan selesai.', 72, 98, 56, 3],
-            [5, 48, 'ujian pewaris', 'Warisan aksara hanya dijaga oleh pemain yang tekun, cermat, dan konsisten.', 74, 98, 54, 3],
-            [5, 49, 'gerbang akhir', 'Di depan Gerbang Akhir, seluruh kemampuan mengetik diuji dalam satu perjalanan.', 76, 98, 54, 3],
-            [5, 50, 'boss akhir siliwangi', 'BOSS FINAL #50: Prabu Siliwangi menanti; ketik LARAS-2076 dengan akurasi 100%!', 80, 98, 52, 2],
+            // BAB 5 — akhir hidup, legenda, historiografi kritis, dan sintesis akhir
+            [5, 41, 'akhir hayat', 'Sri Baduga wafat sekitar 1521 dan disebut dalam Prasasti Batu Tulis.', 64, 96, 62, 5],
+            [5, 42, 'kremasi', 'Bukti sejarah mengarah pada praktik perabuan jenazah sesuai tradisi Hindu.', 65, 96, 60, 5],
+            [5, 43, 'legenda moksa', 'Kisah moksa Siliwangi adalah legenda, bukan laporan sejarah langsung.', 66, 97, 60, 4],
+            [5, 44, 'macan putih', 'Simbol macan putih memperkuat posisi Siliwangi dalam imajinasi Sunda.', 67, 97, 58, 4],
+            [5, 45, 'gelar kolektif', 'Sebagian tafsir melihat Siliwangi sebagai gelar kolektif, bukan satu orang.', 68, 97, 58, 4],
+            [5, 46, 'historiografi', 'Historiografi kritis menuntut pemisahan antara prasasti, naskah, dan tutur lisan.', 70, 97, 56, 4],
+            [5, 47, 'sintesis tokoh', 'Sri Baduga adalah inti historis, sedangkan Siliwangi juga hidup sebagai simbol budaya.', 72, 98, 56, 3],
+            [5, 48, 'warisan sunda', 'Warisan Siliwangi bertahan karena sejarah, legenda, dan identitas Sunda saling bertaut.', 74, 98, 54, 3],
+            [5, 49, 'uji akhir', 'Pemain harus memahami bahwa Pajajaran, Sunda, dan Pakuan tidak selalu identik.', 76, 98, 54, 3],
+            [5, 50, 'boss akhir siliwangi', 'BOSS FINAL #50: Prabu Siliwangi berada di batas sejarah, legenda, dan ingatan kolektif Sunda.', 80, 98, 52, 2],
         ];
 
         foreach ($levels as $item) {
@@ -102,11 +102,11 @@ class LevelSeeder extends Seeder
     private function storyText(int $chapterNumber, int $levelNumber): string
     {
         return match ($chapterNumber) {
-            1 => "BAB 1 mengajarkan dasar mengetik melalui huruf kecil, kata pendek, dan kalimat sederhana pada level {$levelNumber}.",
-            2 => "BAB 2 mulai memperkenalkan kalimat lebih panjang, huruf kapital, koma, titik, dan tanda tanya pada level {$levelNumber}.",
-            3 => "BAB 3 membawa pemain ke naskah kerajaan dengan struktur kalimat lebih kompleks dan tanda baca yang lebih beragam pada level {$levelNumber}.",
-            4 => "BAB 4 menjadi Ujian Pajajaran dengan angka, waktu, persen, kode, dan simbol teknis pada level {$levelNumber}.",
-            5 => "BAB 5 adalah tahap Pewaris Siliwangi dengan kombinasi huruf kapital, angka, simbol, tekanan waktu, dan akurasi tinggi pada level {$levelNumber}.",
+            1 => "BAB 1 memperkenalkan Prabu Siliwangi dan Sri Baduga melalui kalimat pendek yang mudah diketik pada level {$levelNumber}.",
+            2 => "BAB 2 membahas asal-usul, silsilah, dan keterbatasan bukti sejarah tentang tokoh Siliwangi pada level {$levelNumber}.",
+            3 => "BAB 3 menelusuri naik takhta, pusat kekuasaan Pakuan, dan masa kejayaan Kerajaan Sunda pada level {$levelNumber}.",
+            4 => "BAB 4 mengajak pemain membaca konteks politik, prasasti, angka tahun, dan proses kemunduran Sunda pada level {$levelNumber}.",
+            5 => "BAB 5 membedakan akhir historis Sri Baduga, legenda moksa, dan makna Siliwangi dalam ingatan kolektif Sunda pada level {$levelNumber}.",
             default => "Level {$levelNumber} dalam perjalanan LARAS.",
         };
     }

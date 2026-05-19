@@ -30,15 +30,36 @@
                     <option :value="8">8 pemain</option>
                 </select>
 
-                <label class="form-label">Level teks challenge</label>
-                <select v-model.number="form.level_id" class="form-input">
-                    <option v-for="level in levels" :key="level.id" :value="level.id">
-                        Level {{ level.level_number }} · {{ level.title }}
-                    </option>
-                </select>
+                <label class="form-label">Jumlah kata</label>
+                <div class="challenge-choice-grid">
+                    <button
+                        v-for="option in wordOptions"
+                        :key="option"
+                        class="challenge-choice-btn"
+                        :class="{ active: form.word_count === option }"
+                        type="button"
+                        @click="form.word_count = option"
+                    >
+                        {{ option }} kata
+                    </button>
+                </div>
+
+                <label class="form-label">Waktu challenge</label>
+                <div class="challenge-choice-grid three-cols">
+                    <button
+                        v-for="option in timeOptions"
+                        :key="option"
+                        class="challenge-choice-btn"
+                        :class="{ active: form.time_limit_seconds === option }"
+                        type="button"
+                        @click="form.time_limit_seconds = option"
+                    >
+                        {{ option }} detik
+                    </button>
+                </div>
 
                 <p class="mini-note">
-                    Private room tetap tampil di lobby, tetapi butuh kode room untuk masuk.
+                    Teks challenge akan diacak dari kumpulan kata yang tersedia di story mode. Semua pemain dalam room mendapatkan teks yang sama.
                 </p>
 
                 <div v-if="error" class="form-error">{{ error }}</div>
@@ -52,7 +73,7 @@
                 <div class="section-row">
                     <div>
                         <div class="sec-head">Daftar Room</div>
-                        <p class="mini-note">Tahap 6 masih basic. Update room memakai refresh/polling, belum WebSocket.</p>
+                        <p class="mini-note">Challenge memakai jumlah kata dan durasi, bukan pemilihan level.</p>
                     </div>
                     <span class="tag-pill">{{ rooms.length }} room aktif</span>
                 </div>
@@ -75,8 +96,8 @@
                         <div class="room-meta-grid">
                             <span>Mode <strong>{{ room.type }}</strong></span>
                             <span>Pemain <strong>{{ room.participants_count }}/{{ room.capacity }}</strong></span>
-                            <span>Level <strong>{{ room.level_summary?.level_number || '-' }}</strong></span>
-                            <span>Target <strong>{{ room.level_summary?.target_wpm || '-' }} WPM</strong></span>
+                            <span>Kata <strong>{{ room.word_count || room.challenge_summary?.word_count || '-' }}</strong></span>
+                            <span>Waktu <strong>{{ room.time_limit_seconds || room.challenge_summary?.time_limit_seconds || '-' }} detik</strong></span>
                         </div>
 
                         <div v-if="room.is_private && !room.is_joined" class="private-join-row">
@@ -130,22 +151,24 @@ import { onMounted, onBeforeUnmount, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import ThemeToggle from '@/components/ThemeToggle.vue';
 import { challengeApi } from '@/services/challengeApi';
-import { levelApi } from '@/services/levelApi';
 
 const router = useRouter();
 const rooms = ref([]);
-const levels = ref([]);
 const loading = ref(false);
 const creating = ref(false);
 const error = ref('');
 const privateCodes = reactive({});
 let poller = null;
 
+const wordOptions = [10, 20, 40, 80, 160];
+const timeOptions = [10, 30, 60];
+
 const form = reactive({
     name: 'Balap Aksara Pagi',
     type: 'public',
     capacity: 2,
-    level_id: null,
+    word_count: 20,
+    time_limit_seconds: 30,
 });
 
 function statusLabel(status) {
@@ -167,12 +190,6 @@ async function loadRooms() {
     } finally {
         loading.value = false;
     }
-}
-
-async function loadLevels() {
-    const data = await levelApi.list();
-    levels.value = data;
-    form.level_id = data[0]?.id || null;
 }
 
 async function createRoom() {
@@ -207,7 +224,7 @@ async function joinPrivate(room) {
 }
 
 onMounted(async () => {
-    await Promise.all([loadLevels(), loadRooms()]);
+    await loadRooms();
     poller = setInterval(loadRooms, 5000);
 });
 

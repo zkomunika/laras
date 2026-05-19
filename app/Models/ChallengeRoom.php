@@ -23,6 +23,9 @@ class ChallengeRoom extends Model
         'type',
         'code',
         'capacity',
+        'word_count',
+        'time_limit_seconds',
+        'target_text',
         'status',
         'started_at',
         'finished_at',
@@ -30,6 +33,8 @@ class ChallengeRoom extends Model
 
     protected $casts = [
         'capacity' => 'integer',
+        'word_count' => 'integer',
+        'time_limit_seconds' => 'integer',
         'started_at' => 'datetime',
         'finished_at' => 'datetime',
     ];

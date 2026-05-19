@@ -37,21 +37,23 @@ class ChallengeRoomController extends Controller
             'name' => ['required', 'string', 'max:120'],
             'type' => ['required', Rule::in([ChallengeRoom::TYPE_PUBLIC, ChallengeRoom::TYPE_PRIVATE])],
             'capacity' => ['required', 'integer', Rule::in([2, 4, 8])],
-            'level_id' => ['nullable', 'exists:levels,id'],
+            'word_count' => ['required', 'integer', Rule::in([10, 20, 40, 80, 160])],
+            'time_limit_seconds' => ['required', 'integer', Rule::in([10, 30, 60])],
         ]);
 
-        $level = isset($validated['level_id'])
-            ? Level::findOrFail($validated['level_id'])
-            : Level::orderBy('level_number')->firstOrFail();
+        $targetText = $this->generateChallengeTargetText((int) $validated['word_count']);
 
-        $room = DB::transaction(function () use ($request, $validated, $level) {
+        $room = DB::transaction(function () use ($request, $validated, $targetText) {
             $room = ChallengeRoom::create([
                 'master_user_id' => $request->user()->id,
-                'level_id' => $level->id,
+                'level_id' => null,
                 'name' => $validated['name'],
                 'type' => $validated['type'],
                 'code' => $validated['type'] === ChallengeRoom::TYPE_PRIVATE ? $this->generateRoomCode() : null,
                 'capacity' => $validated['capacity'],
+                'word_count' => $validated['word_count'],
+                'time_limit_seconds' => $validated['time_limit_seconds'],
+                'target_text' => $targetText,
                 'status' => ChallengeRoom::STATUS_WAITING,
             ]);
 
@@ -365,6 +367,7 @@ class ChallengeRoomController extends Controller
 
         return [
             ...$this->roomSummary($room, $userId),
+            'challenge' => $this->formatChallenge($room, true),
             'level' => $this->formatLevel($room->level),
             'participants' => $room->participants
                 ->sortBy('id')
@@ -396,6 +399,8 @@ class ChallengeRoomController extends Controller
             'is_private' => $room->type === ChallengeRoom::TYPE_PRIVATE,
             'code' => $isJoined ? $room->code : null,
             'capacity' => $room->capacity,
+            'word_count' => $this->challengeWordCount($room),
+            'time_limit_seconds' => $this->challengeTimeLimit($room),
             'status' => $room->status,
             'started_at' => optional($room->started_at)->toISOString(),
             'finished_at' => optional($room->finished_at)->toISOString(),
@@ -413,6 +418,7 @@ class ChallengeRoomController extends Controller
                 'target_wpm' => $room->level->target_wpm,
                 'min_accuracy' => $room->level->min_accuracy,
             ] : null,
+            'challenge_summary' => $this->formatChallenge($room, false),
             'is_master' => $userId ? (int) $room->master_user_id === (int) $userId : false,
             'is_joined' => $isJoined,
             'can_start' => $userId ? (int) $room->master_user_id === (int) $userId && $room->status === ChallengeRoom::STATUS_WAITING : false,
@@ -482,10 +488,59 @@ class ChallengeRoomController extends Controller
         ];
     }
 
+    private function formatChallenge(ChallengeRoom $room, bool $includeTargetText = false): array
+    {
+        $data = [
+            'word_count' => $this->challengeWordCount($room),
+            'time_limit_seconds' => $this->challengeTimeLimit($room),
+            'source' => 'story_mode_words',
+        ];
+
+        if ($includeTargetText) {
+            $data['target_text'] = $this->challengeTargetText($room);
+        }
+
+        return $data;
+    }
+
+    private function challengeTargetText(ChallengeRoom $room): string
+    {
+        if (!empty($room->target_text)) {
+            return $room->target_text;
+        }
+
+        return (string) ($room->level?->target_text ?? '');
+    }
+
+    private function challengeWordCount(ChallengeRoom $room): int
+    {
+        if (!empty($room->word_count)) {
+            return (int) $room->word_count;
+        }
+
+        $targetText = $this->challengeTargetText($room);
+
+        if ($targetText === '') {
+            return 0;
+        }
+
+        preg_match_all('/[\p{L}\p{N}]+/u', $targetText, $matches);
+
+        return count($matches[0] ?? []);
+    }
+
+    private function challengeTimeLimit(ChallengeRoom $room): int
+    {
+        if (!empty($room->time_limit_seconds)) {
+            return (int) $room->time_limit_seconds;
+        }
+
+        return (int) ($room->level?->time_limit_seconds ?? 30);
+    }
+
     private function calculateChallengeResult(ChallengeRoom $room, string $typedText): array
     {
-        $level = $room->level ?: Level::orderBy('level_number')->firstOrFail();
-        $targetText = $level->target_text;
+        $targetText = $this->challengeTargetText($room);
 
         $typedLength = mb_strlen($typedText);
         $targetLength = mb_strlen($targetText);
@@ -518,23 +573,11 @@ class ChallengeRoomController extends Controller
         $failedRules = [];
 
         if ($typedText !== $targetText) {
-            $failedRules[] = ['code' => 'exact_text_match', 'message' => 'Teks belum sama persis dengan target.'];
+            $failedRules[] = ['code' => 'exact_text_match', 'message' => 'Teks belum sama persis dengan target challenge.'];
         }
 
-        if ($level->time_limit_seconds !== null && $durationSeconds > (float) $level->time_limit_seconds) {
-            $failedRules[] = ['code' => 'within_time_limit', 'message' => 'Durasi melewati batas waktu level.'];
-        }
-
-        if ($level->max_mistakes !== null && $mistakes > (int) $level->max_mistakes) {
-            $failedRules[] = ['code' => 'within_mistake_limit', 'message' => 'Jumlah kesalahan melewati batas maksimal.'];
-        }
-
-        if ($accuracy < (float) $level->min_accuracy) {
-            $failedRules[] = ['code' => 'meets_accuracy', 'message' => 'Akurasi belum mencapai minimum level.'];
-        }
-
-        if ($wpm < (float) $level->target_wpm) {
-            $failedRules[] = ['code' => 'meets_wpm', 'message' => 'WPM belum mencapai target level.'];
+        if ($durationSeconds > (float) $this->challengeTimeLimit($room)) {
+            $failedRules[] = ['code' => 'within_time_limit', 'message' => 'Durasi melewati batas waktu challenge.'];
         }
 
         $completed = count($failedRules) === 0;
@@ -597,5 +640,39 @@ class ChallengeRoomController extends Controller
         } while (ChallengeRoom::where('code', $code)->exists());
 
         return $code;
+    }
+
+    private function generateChallengeTargetText(int $wordCount): string
+    {
+        $wordPool = Level::query()
+            ->whereNotNull('target_text')
+            ->pluck('target_text')
+            ->flatMap(function (?string $targetText) {
+                preg_match_all('/[\p{L}\p{N}]+/u', Str::lower((string) $targetText), $matches);
+
+                return $matches[0] ?? [];
+            })
+            ->map(fn (string $word) => trim($word))
+            ->filter(fn (string $word) => mb_strlen($word) >= 2)
+            ->unique()
+            ->values();
+
+        if ($wordPool->isEmpty()) {
+            $wordPool = collect([
+                'sunda', 'pakuan', 'pajajaran', 'sejarah', 'kerajaan', 'aksara', 'budaya', 'naskah', 'raja', 'warisan',
+            ]);
+        }
+
+        $selectedWords = [];
+
+        while (count($selectedWords) < $wordCount) {
+            $needed = $wordCount - count($selectedWords);
+            $selectedWords = array_merge(
+                $selectedWords,
+                $wordPool->shuffle()->take($needed)->all()
+            );
+        }
+
+        return implode(' ', array_slice($selectedWords, 0, $wordCount));
     }
 }

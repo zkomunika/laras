@@ -82,7 +82,7 @@
                         <textarea
                             ref="typingInput"
                             :value="typedText"
-                            :disabled="!attemptId || inputDisabled || saving"
+                            :disabled="typingInputDisabled"
                             class="typing-input"
                             spellcheck="false"
                             autocomplete="off"
@@ -93,7 +93,7 @@
                         ></textarea>
 
                         <div class="typing-hint">
-                            Tekan Mulai, lalu ketik teks target sampai selesai. Backend akan mengecek teks, WPM, akurasi, batas waktu, dan jumlah salah.
+                            Ketik huruf apa pun untuk langsung memulai level, atau klik tombol Mulai Level. Backend tetap mengecek teks, WPM, akurasi, batas waktu, dan jumlah salah.
                         </div>
                     </div>
 
@@ -291,6 +291,8 @@ const submitError = ref('');
 const typingInput = ref(null);
 const feedbackState = ref('idle');
 let feedbackTimer = null;
+let pendingAutoStartText = '';
+let pendingStartPromise = null;
 
 const {
     targetText,
@@ -370,6 +372,10 @@ const progressPercent = computed(() => {
     return Math.min(100, Math.round((typedText.value.length / targetText.value.length) * 100));
 });
 
+const typingInputDisabled = computed(() => {
+    return !level.value || saving.value || submitted.value || inputDisabled.value;
+});
+
 const timerLabel = computed(() => {
     if (remainingSeconds.value !== null) {
         return remainingSeconds.value;
@@ -380,7 +386,7 @@ const timerLabel = computed(() => {
 
 const inputPlaceholder = computed(() => {
     if (!attemptId.value) {
-        return 'Klik Mulai Level untuk mengaktifkan area ketik.';
+        return 'Ketik huruf apa pun untuk langsung mulai level.';
     }
 
     if (saving.value) {
@@ -392,6 +398,7 @@ const inputPlaceholder = computed(() => {
 
 onMounted(() => {
     loadLevel();
+    window.addEventListener('keydown', handleGlobalTypingShortcut);
 });
 
 watch(
@@ -422,6 +429,8 @@ async function loadLevel() {
     attemptId.value = null;
     submitResult.value = null;
     submitted.value = false;
+    pendingAutoStartText = '';
+    pendingStartPromise = null;
     setFeedbackState('idle', 0);
     resetGame();
 
@@ -464,8 +473,12 @@ function isLevelUnlocked(levelData) {
 }
 
 async function handleStart() {
+    return beginAttempt();
+}
+
+async function beginAttempt() {
     if (!level.value || starting.value) {
-        return;
+        return false;
     }
 
     starting.value = true;
@@ -483,23 +496,122 @@ async function handleStart() {
 
         await nextTick();
         typingInput.value?.focus();
+
+        return true;
     } catch (err) {
         if (err.response?.status === 401) {
             auth.clearSession();
             submitError.value = 'Sesi login habis. Silakan login ulang.';
             router.push('/login');
-            return;
+            return false;
         }
 
         submitError.value = err.response?.data?.message || 'Gagal memulai level. Pastikan kamu sudah login.';
+        return false;
     } finally {
         starting.value = false;
     }
 }
 
+async function startFromPendingInput() {
+    if (!pendingAutoStartText.length) {
+        return;
+    }
+
+    if (attemptId.value) {
+        const pendingText = pendingAutoStartText;
+        pendingAutoStartText = '';
+        applyTypingValue(pendingText);
+        await nextTick();
+        typingInput.value?.focus();
+        return;
+    }
+
+    if (pendingStartPromise) {
+        return pendingStartPromise;
+    }
+
+    pendingStartPromise = (async () => {
+        const started = await beginAttempt();
+
+        if (started && pendingAutoStartText.length) {
+            const pendingText = pendingAutoStartText;
+            pendingAutoStartText = '';
+            applyTypingValue(pendingText);
+            await nextTick();
+            typingInput.value?.focus();
+        } else if (!started) {
+            pendingAutoStartText = '';
+            await nextTick();
+
+            if (typingInput.value) {
+                typingInput.value.value = typedText.value;
+            }
+        }
+    })();
+
+    try {
+        await pendingStartPromise;
+    } finally {
+        pendingStartPromise = null;
+    }
+}
+
 function onTyping(event) {
+    const inputValue = String(event.target.value || '');
+
+    if (!attemptId.value) {
+        pendingAutoStartText = inputValue;
+        startFromPendingInput();
+        return;
+    }
+
+    applyTypingValue(inputValue);
+}
+
+function handleGlobalTypingShortcut(event) {
+    if (!shouldCaptureTypingShortcut(event)) {
+        return;
+    }
+
+    if (event.target === typingInput.value) {
+        return;
+    }
+
+    event.preventDefault();
+
+    if (attemptId.value) {
+        applyTypingValue(`${typedText.value}${event.key}`);
+        nextTick(() => typingInput.value?.focus());
+        return;
+    }
+
+    pendingAutoStartText += event.key;
+    startFromPendingInput();
+}
+
+function shouldCaptureTypingShortcut(event) {
+    if (event.ctrlKey || event.metaKey || event.altKey || event.isComposing) {
+        return false;
+    }
+
+    if (event.key.length !== 1) {
+        return false;
+    }
+
+    if (!level.value || loading.value || typingInputDisabled.value) {
+        return false;
+    }
+
+    const tagName = event.target?.tagName?.toLowerCase();
+    const isEditable = event.target?.isContentEditable || ['input', 'textarea', 'select'].includes(tagName);
+
+    return !isEditable || event.target === typingInput.value;
+}
+
+function applyTypingValue(value) {
     const previousLength = typedText.value.length;
-    updateTypedText(event.target.value);
+    updateTypedText(value);
 
     if (typedText.value.length <= previousLength || !typedText.value.length) {
         return;
@@ -572,16 +684,19 @@ function retryLevel() {
     submitResult.value = null;
     submitError.value = '';
     submitted.value = false;
+    pendingAutoStartText = '';
+    pendingStartPromise = null;
     setFeedbackState('idle', 0);
     resetGame();
 }
 
 onBeforeUnmount(() => {
+    window.removeEventListener('keydown', handleGlobalTypingShortcut);
+
     if (feedbackTimer) {
         clearTimeout(feedbackTimer);
         feedbackTimer = null;
     }
-
 });
 
 function setFeedbackState(state, duration = 480) {

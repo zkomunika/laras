@@ -3,14 +3,14 @@
         <div class="audio-settings-head">
             <div>
                 <strong>Audio Interaktif</strong>
-                <span>Backsound global dan efek suara interaktif dari soundService.js.</span>
+                <span>Musik dan efek suara untuk feedback gameplay.</span>
             </div>
         </div>
 
         <div class="setting-row">
             <div>
                 <b>Backsound</b>
-                <span>Berputar sejak login dan berhenti hanya saat OFF atau logout.</span>
+                <span>Nuansa rendah untuk mode cerita.</span>
             </div>
             <button
                 type="button"
@@ -37,7 +37,7 @@
         <div class="setting-row">
             <div>
                 <b>Sound Effect</b>
-                <span>Feedback saat mengetik, salah, menang, dan naik level.</span>
+                <span>Feedback saat benar, salah, menang, dan gagal.</span>
             </div>
             <button
                 type="button"
@@ -61,6 +61,9 @@
             >
         </label>
 
+        <button type="button" class="btn btn-secondary audio-test-btn" @click="testSfx">
+            Tes SFX
+        </button>
     </div>
 </template>
 
@@ -75,8 +78,13 @@ function toggleMusic() {
 
 function toggleSfx() {
     audio.setSfxEnabled(!audio.sfxEnabled);
-    if (audio.sfxEnabled) {
-        audio.playSfx('click');
+    if (!audio.sfxEnabled) {
+        return;
     }
+    audio.playSfx('click');
+}
+
+function testSfx() {
+    audio.testSfx('levelUp');
 }
 </script>

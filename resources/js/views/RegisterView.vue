@@ -66,9 +66,11 @@
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
+import { useAudioStore } from '@/stores/audioStore';
 
 const router = useRouter();
 const auth = useAuthStore();
+const audio = useAudioStore();
 
 const loading = ref(false);
 const error = ref('');
@@ -84,9 +86,12 @@ async function submitRegister() {
     error.value = '';
 
     try {
+        audio.startMusic();
         await auth.register(form);
+        audio.startMusic();
         router.push('/');
     } catch (err) {
+        audio.stopMusic({ reset: true });
         error.value = err.response?.data?.message || 'Register gagal.';
     } finally {
         loading.value = false;

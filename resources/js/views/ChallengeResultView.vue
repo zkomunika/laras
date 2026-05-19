@@ -52,7 +52,8 @@
                     <div class="detail-meta">Mode: <strong>{{ room?.type }}</strong></div>
                     <div class="detail-meta">Status: <strong>{{ statusLabel(room?.status) }}</strong></div>
                     <div class="detail-meta">Pemain: <strong>{{ room?.participants_count }}/{{ room?.capacity }}</strong></div>
-                    <div class="detail-meta">Level: <strong>{{ room?.level_summary?.level_number }} · {{ room?.level_summary?.title }}</strong></div>
+                    <div class="detail-meta">Jumlah kata: <strong>{{ room?.word_count || room?.challenge_summary?.word_count }} kata</strong></div>
+                    <div class="detail-meta">Waktu: <strong>{{ room?.time_limit_seconds || room?.challenge_summary?.time_limit_seconds }} detik</strong></div>
 
                     <div class="room-actions large-actions">
                         <RouterLink to="/challenge" class="btn btn-primary">Kembali ke Lobby</RouterLink>

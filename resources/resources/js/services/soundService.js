@@ -8,6 +8,19 @@ const SOUND_SOURCES = {
     levelUp: 'https://raw.githubusercontent.com/IonDen/ion.sound/master/sounds/magic_chime.mp3',
 };
 
+const BGM_PRESETS = {
+    story: {
+        source: SOUND_SOURCES.bgm,
+        volumeMultiplier: 1,
+        playbackRate: 0.92,
+    },
+    challenge: {
+        source: SOUND_SOURCES.bgm,
+        volumeMultiplier: 1.25,
+        playbackRate: 1.08,
+    },
+};
+
 const SFX_ALIASES = {
     combo: 'levelUp',
     win: 'finish',
@@ -27,10 +40,13 @@ const SFX_PRESETS = {
 
 class SoundService {
     constructor() {
-        this.music = this.createAudio(SOUND_SOURCES.bgm, {
-            loop: true,
-            preload: 'auto',
-        });
+        this.musicTracks = Object.entries(BGM_PRESETS).reduce((tracks, [key, preset]) => {
+            tracks[key] = this.createAudio(preset.source, {
+                loop: true,
+                preload: 'auto',
+            });
+            return tracks;
+        }, {});
 
         this.sounds = {
             click: this.createAudio(SOUND_SOURCES.click),
@@ -47,8 +63,8 @@ class SoundService {
         this.sfxEnabled = !legacyMuted;
         this.musicVolume = 0.18;
         this.sfxVolume = 0.32;
+        this.currentBgmKey = null;
         this.musicPlayToken = 0;
-        this.resumeHandler = null;
     }
 
     createAudio(source, options = {}) {
@@ -92,7 +108,7 @@ class SoundService {
 
     setMusicVolume(value) {
         this.musicVolume = this.normalizeVolume(value, 0.18);
-        this.updateMusicVolume();
+        this.updateCurrentMusicVolume();
     }
 
     setSfxVolume(value) {
@@ -127,90 +143,82 @@ class SoundService {
         return Math.min(1, Math.max(0, Number(value) || 0));
     }
 
-    updateMusicVolume() {
-        this.music.volume = this.clampVolume(this.musicVolume);
+    updateCurrentMusicVolume() {
+        if (!this.currentBgmKey) {
+            return;
+        }
+
+        const bgm = this.musicTracks[this.currentBgmKey];
+        const preset = BGM_PRESETS[this.currentBgmKey] ?? BGM_PRESETS.story;
+
+        if (bgm) {
+            bgm.volume = this.clampVolume(this.musicVolume * preset.volumeMultiplier);
+        }
     }
 
-    async playBGM() {
-        return this.playMusic();
+    async playBGM(mode = 'story') {
+        return this.playMusic(mode);
     }
 
-    async playMusic() {
+    async playMusic(mode = 'story') {
         if (!this.musicEnabled) {
             return false;
         }
 
-        const token = ++this.musicPlayToken;
+        const bgmKey = BGM_PRESETS[mode] ? mode : 'story';
+        const bgm = this.musicTracks[bgmKey];
+        const preset = BGM_PRESETS[bgmKey];
 
-        this.music.loop = true;
-        this.music.muted = false;
-        this.music.playbackRate = 1;
-        this.updateMusicVolume();
-
-        if (!this.music.paused) {
-            return true;
+        if (!bgm) {
+            return false;
         }
 
-        try {
-            await this.music.play();
-            this.clearResumeListener();
+        if (this.currentBgmKey && this.currentBgmKey !== bgmKey) {
+            this.stopBGM({ reset: false });
+        }
 
-            if (token !== this.musicPlayToken || !this.musicEnabled) {
-                this.music.pause();
+        const playToken = ++this.musicPlayToken;
+        this.currentBgmKey = bgmKey;
+        bgm.muted = false;
+        bgm.volume = this.clampVolume(this.musicVolume * preset.volumeMultiplier);
+        bgm.playbackRate = preset.playbackRate;
+
+        try {
+            await bgm.play();
+
+            const isStalePlayRequest = playToken !== this.musicPlayToken || this.currentBgmKey !== bgmKey || !this.musicEnabled;
+            if (isStalePlayRequest) {
+                bgm.pause();
                 return false;
             }
 
             return true;
         } catch (error) {
-            console.warn('BGM play blocked or failed', error);
-            this.scheduleResumeOnUserGesture();
+            if (playToken === this.musicPlayToken) {
+                console.warn('BGM play blocked or failed', error);
+            }
             return false;
         }
-    }
-
-    scheduleResumeOnUserGesture() {
-        if (typeof window === 'undefined' || this.resumeHandler || !this.musicEnabled) {
-            return;
-        }
-
-        this.resumeHandler = () => {
-            this.clearResumeListener();
-            this.playMusic();
-        };
-
-        window.addEventListener('pointerdown', this.resumeHandler, { once: true });
-        window.addEventListener('keydown', this.resumeHandler, { once: true });
-        window.addEventListener('touchstart', this.resumeHandler, { once: true });
-    }
-
-    clearResumeListener() {
-        if (typeof window === 'undefined' || !this.resumeHandler) {
-            return;
-        }
-
-        window.removeEventListener('pointerdown', this.resumeHandler);
-        window.removeEventListener('keydown', this.resumeHandler);
-        window.removeEventListener('touchstart', this.resumeHandler);
-        this.resumeHandler = null;
     }
 
     stopBGM(options = {}) {
         const { reset = true } = options;
-
         this.musicPlayToken += 1;
-        this.clearResumeListener();
-        this.music.pause();
 
-        if (reset) {
-            this.music.currentTime = 0;
-        }
+        Object.values(this.musicTracks).forEach((bgm) => {
+            bgm.pause();
+
+            if (reset) {
+                bgm.currentTime = 0;
+            }
+        });
+
+        this.currentBgmKey = null;
     }
 
     play(soundName, options = {}) {
-        const force = Boolean(options.force);
-
-        if (!this.sfxEnabled && !force) {
-            return false;
+        if (!this.sfxEnabled) {
+            return;
         }
 
         const resolvedSoundName = SFX_ALIASES[soundName] ?? soundName;
@@ -218,21 +226,27 @@ class SoundService {
 
         if (!baseSound) {
             console.warn(`SFX "${soundName}" tidak ditemukan di soundService.js`);
-            return false;
+            return;
         }
 
         const preset = SFX_PRESETS[resolvedSoundName] ?? { volumeMultiplier: 1 };
         const sound = baseSound.cloneNode(true);
         const volumeMultiplier = options.volumeMultiplier ?? preset.volumeMultiplier;
-        const fallbackVolume = this.sfxVolume > 0 ? this.sfxVolume : 0.32;
 
         sound.muted = false;
-        sound.volume = this.clampVolume(fallbackVolume * volumeMultiplier);
+        sound.volume = this.clampVolume(this.sfxVolume * volumeMultiplier);
         sound.playbackRate = options.playbackRate ?? 1;
-        sound.currentTime = 0;
-
         sound.play().catch((error) => console.log('SFX play blocked', error));
-        return true;
+    }
+
+
+    preview(soundName = 'levelUp', options = {}) {
+        const previousSfxEnabled = this.sfxEnabled;
+        this.sfxEnabled = true;
+        this.applyMuteState();
+        this.play(soundName, options);
+        this.sfxEnabled = previousSfxEnabled;
+        this.applyMuteState();
     }
 
     toggleMute() {
@@ -257,7 +271,9 @@ class SoundService {
     }
 
     applyMuteState() {
-        this.music.muted = !this.musicEnabled;
+        Object.values(this.musicTracks).forEach((bgm) => {
+            bgm.muted = !this.musicEnabled;
+        });
 
         Object.values(this.sounds).forEach((sound) => {
             sound.muted = !this.sfxEnabled;

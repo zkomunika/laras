@@ -17,6 +17,7 @@ export const useAudioStore = defineStore('audio', {
         sfxEnabled: true,
         musicVolume: 0.18,
         sfxVolume: 0.32,
+        currentMusicMode: 'story',
         initialized: false,
     }),
 
@@ -34,7 +35,7 @@ export const useAudioStore = defineStore('audio', {
             const saved = safeParse(localStorage.getItem(AUDIO_STORAGE_KEY), null);
 
             if (saved) {
-                this.musicEnabled = saved.musicEnabled !== false;
+                this.musicEnabled = Boolean(saved.musicEnabled);
                 this.sfxEnabled = saved.sfxEnabled !== false;
                 this.musicVolume = Number.isFinite(Number(saved.musicVolume)) ? Number(saved.musicVolume) : 0.18;
                 this.sfxVolume = Number.isFinite(Number(saved.sfxVolume)) ? Number(saved.sfxVolume) : 0.32;
@@ -72,7 +73,7 @@ export const useAudioStore = defineStore('audio', {
             this.syncSoundService();
 
             if (this.musicEnabled) {
-                this.startMusic();
+                this.startMusic(this.currentMusicMode);
             } else {
                 this.stopMusic({ reset: false });
             }
@@ -96,14 +97,15 @@ export const useAudioStore = defineStore('audio', {
             this.syncSoundService();
         },
 
-        startMusic() {
+        startMusic(mode = 'story') {
+            this.currentMusicMode = mode;
             this.syncSoundService();
 
             if (!this.musicEnabled) {
                 return;
             }
 
-            soundService.playBGM();
+            soundService.playBGM(mode);
         },
 
         stopMusic(options = {}) {
@@ -113,6 +115,15 @@ export const useAudioStore = defineStore('audio', {
         playSfx(type = 'correct', options = {}) {
             this.syncSoundService();
             soundService.play(type, options);
+        },
+
+        testSfx(type = 'levelUp') {
+            if (!this.initialized) {
+                this.init();
+            }
+
+            this.syncSoundService();
+            soundService.preview(type, { volumeMultiplier: 1.15 });
         },
     },
 });
